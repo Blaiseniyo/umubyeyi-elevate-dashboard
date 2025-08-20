@@ -7,7 +7,6 @@ import {
   Button,
   Typography,
   Alert,
-  Avatar,
   Container,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
@@ -52,50 +51,65 @@ const Login: React.FC = () => {
 
   if (loading) {
     return (
-      <Container maxWidth="sm">
-        <Box sx={{ mt: 8 }}>
-          <LoadingSpinner message="Signing you in..." />
-        </Box>
-      </Container>
-    );
-  }
-
-  return (
-    <Container maxWidth="sm">
       <Box
         sx={{
           minHeight: '100vh',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          py: 4,
+          backgroundColor: 'primary.main',
+          backgroundImage: 'linear-gradient(135deg, #016174 0%, #4a8a9a 100%)',
         }}
       >
+        <Container maxWidth="sm">
+          <Box sx={{
+            bgcolor: 'white',
+            p: 4,
+            borderRadius: 2,
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          }}>
+            <LoadingSpinner message="Signing you in..." />
+          </Box>
+        </Container>
+      </Box>
+    );
+  }
+
+  return (
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'primary.main',
+        backgroundImage: 'linear-gradient(135deg, #016174 0%, #4a8a9a 100%)',
+        py: 4,
+      }}
+    >
+      <Container maxWidth="sm">
         <Card
           sx={{
             width: '100%',
             maxWidth: 400,
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+            mx: 'auto',
+            borderRadius: 2,
           }}
         >
           <CardContent sx={{ p: 4 }}>
             <Box sx={{ textAlign: 'center', mb: 4 }}>
-              <Avatar
+              <Box
+                component="img"
+                src="/umubyeyi_logo.png"
+                alt="Umubyeyi Elevate"
                 sx={{
-                  width: 64,
-                  height: 64,
-                  bgcolor: 'primary.main',
-                  mx: 'auto',
+                  height: 80,
                   mb: 2,
-                  fontSize: '1.5rem',
-                  fontWeight: 600,
+                  mx: 'auto',
+                  display: 'block'
                 }}
-              >
-                UE
-              </Avatar>
-              <Typography variant="h4" sx={{ fontWeight: 600, color: 'primary.main', mb: 1 }}>
-                Umubyeyi Elevate
-              </Typography>
+              />
               <Typography variant="body2" color="text.secondary">
                 Admin Dashboard
               </Typography>
@@ -155,8 +169,8 @@ const Login: React.FC = () => {
             </Box>
           </CardContent>
         </Card>
-      </Box>
-    </Container>
+      </Container>
+    </Box>
   );
 };
 
