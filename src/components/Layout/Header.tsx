@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   AppBar,
   Toolbar,
@@ -14,7 +14,6 @@ import {
 import {
   Menu as MenuIcon,
   Notifications,
-  AccountCircle,
   Settings,
   ExitToApp,
 } from '@mui/icons-material';
@@ -31,6 +30,40 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const { notifications } = useAppSelector((state) => state.ui);
+  const [sidebarExpanded, setSidebarExpanded] = useState<boolean>(() => {
+    const savedState = localStorage.getItem('sidebarExpanded');
+    return savedState !== null ? JSON.parse(savedState) : true;
+  });
+  const sidebarWidth = sidebarExpanded ? 280 : 72;
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const expanded = localStorage.getItem('sidebarExpanded');
+      if (expanded !== null) {
+        setSidebarExpanded(JSON.parse(expanded));
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    // Check for changes regularly
+    const checkSidebarState = () => {
+      const expanded = localStorage.getItem('sidebarExpanded');
+      if (expanded !== null) {
+        const parsedValue = JSON.parse(expanded);
+        if (parsedValue !== sidebarExpanded) {
+          setSidebarExpanded(parsedValue);
+        }
+      }
+    };
+
+    const intervalId = setInterval(checkSidebarState, 300);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(intervalId);
+    };
+  }, [sidebarExpanded]);
 
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
@@ -57,13 +90,14 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
     <AppBar
       position="fixed"
       sx={{
-        width: { md: `calc(100% - 280px)` },
-        ml: { md: '280px' },
+        width: { md: `calc(100% - ${sidebarWidth}px)` },
+        ml: { md: `${sidebarWidth}px` },
         bgcolor: 'white',
         color: 'text.primary',
         boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
         borderBottom: '1px solid',
         borderColor: 'divider',
+        transition: 'width 225ms cubic-bezier(0.4, 0, 0.6, 1) 0ms, margin-left 225ms cubic-bezier(0.4, 0, 0.6, 1) 0ms',
       }}
     >
       <Toolbar>
