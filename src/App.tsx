@@ -46,7 +46,7 @@ const AppContent: React.FC = () => {
             }
           />
           <Route
-            path="content"
+            path="pregnancy-tracker/content"
             element={
               <ProtectedRoute requiredRole="user">
                 <ContentManagement />
@@ -54,7 +54,7 @@ const AppContent: React.FC = () => {
             }
           />
           <Route
-            path="content/weekly/create"
+            path="pregnancy-tracker/content/weekly/create"
             element={
               <ProtectedRoute requiredRole="user">
                 <WeeklyContentPage />
@@ -62,7 +62,7 @@ const AppContent: React.FC = () => {
             }
           />
           <Route
-            path="content/weekly/:id/edit"
+            path="pregnancy-tracker/content/weekly/:id/edit"
             element={
               <ProtectedRoute requiredRole="user">
                 <WeeklyContentPage />
@@ -70,7 +70,7 @@ const AppContent: React.FC = () => {
             }
           />
           <Route
-            path="content/weekly/:id/view"
+            path="pregnancy-tracker/content/weekly/:id/view"
             element={
               <ProtectedRoute requiredRole="user">
                 <WeeklyContentPage />

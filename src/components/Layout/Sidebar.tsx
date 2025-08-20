@@ -17,7 +17,7 @@ import {
 import {
   Dashboard,
   People,
-  Article,
+  PregnantWoman,
   Settings,
   ExitToApp,
   ChevronLeft,
@@ -33,7 +33,7 @@ const collapsedWidth = 72;
 const menuItems = [
   { text: 'Dashboard', icon: <Dashboard />, path: '/dashboard' },
   { text: 'User Management', icon: <People />, path: '/users' },
-  { text: 'Content Management', icon: <Article />, path: '/content' },
+  { text: 'Pregnancy Tracker', icon: <PregnantWoman />, path: '/pregnancy-tracker/content' },
   { text: 'Settings', icon: <Settings />, path: '/settings' },
 ];
 
@@ -120,7 +120,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
                   component="img"
                   src="/favicon.ico"
                   alt="Umubyeyi Icon"
-                  sx={{ 
+                  sx={{
                     height: 40,
                     width: 30,
                     objectFit: 'contain',

@@ -10,9 +10,6 @@ interface ReviewStepProps {
 
 const ReviewStep: React.FC<ReviewStepProps> = ({ content }) => {
 
-
-    console.log("content:", content);
-
     const getTrimesterName = (week: number) => {
         if (week <= 12) return 'First Trimester';
         if (week <= 27) return 'Second Trimester';

@@ -37,7 +37,7 @@ const ContentManagement: React.FC = () => {
   return (
     <Box>
       <Typography variant="h4" sx={{ fontWeight: 600, mb: 3 }}>
-        Content Management
+        Pregnancy Tracker Content Management
       </Typography>
 
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>

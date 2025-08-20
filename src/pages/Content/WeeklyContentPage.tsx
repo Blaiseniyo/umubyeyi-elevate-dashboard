@@ -157,70 +157,70 @@ const WeeklyContentPage: React.FC = () => {
             if (!content.title || content.title.trim() === '') {
                 errors.title = 'Title is required';
             }
-        } 
+        }
         else if (step === 1) {
             // Baby Development step validation
             if (!content.baby_size_image_url) {
                 errors.baby_size_image_url = 'Baby size image is required';
             }
-            
+
             if (!hasContent(content.baby_size_description)) {
                 errors.baby_size_description = 'Baby size description is required';
             }
-            
+
             if (!content.baby_weight_image_url) {
                 errors.baby_weight_image_url = 'Baby weight image is required';
             }
-            
+
             if (!hasContent(content.baby_weight_description)) {
                 errors.baby_weight_description = 'Baby weight description is required';
             }
-            
+
             if (!content.baby_height_image_url) {
                 errors.baby_height_image_url = 'Baby length image is required';
             }
-            
+
             if (!hasContent(content.baby_height_description)) {
                 errors.baby_height_description = 'Baby length description is required';
             }
-            
+
             if (!content.ultrasound_image_url) {
                 errors.ultrasound_image_url = 'Ultrasound image is required';
             }
-            
+
             if (!hasContent(content.ultrasound_description)) {
                 errors.ultrasound_description = 'Ultrasound description is required';
             }
         }
         else if (step === 2) {
             // Symptoms step validation
-            const symptomErrors: {[index: number]: {name?: string; image_url?: string}} = {};
+            const symptomErrors: { [index: number]: { name?: string; image_url?: string } } = {};
             let hasErrors = false;
-            
+
             // Only validate if there are symptoms
             if (content.symptoms && content.symptoms.length > 0) {
                 content.symptoms.forEach((symptom, index) => {
-                    const symptomError: {name?: string; image_url?: string} = {};
-                    
+                    const symptomError: { name?: string; image_url?: string } = {};
+
                     // Validate name
                     if (!symptom.name || !symptom.name.trim()) {
                         symptomError.name = 'Symptom name is required';
                         hasErrors = true;
                     }
-                    
+
                     // Validate image
                     if (!symptom.image_url && !symptom.signed_image_url) {
                         symptomError.image_url = 'Symptom image is required';
                         hasErrors = true;
                     }
-                    
+
                     // Only add symptom errors if there are any
                     if (Object.keys(symptomError).length > 0) {
                         symptomErrors[index] = symptomError;
                     }
                 });
             }
-            
+
             if (hasErrors) {
                 errors.symptoms = symptomErrors;
             }
@@ -246,7 +246,7 @@ const WeeklyContentPage: React.FC = () => {
         // Final validation before submission - validate all steps
         if (!validateContent(0) || !validateContent(1) || !validateContent(2)) {
             setSubmissionError('Please correct the validation errors before submitting');
-            
+
             // Set active step to the first one with errors
             if (!validateContent(0)) {
                 setActiveStep(0);
@@ -310,7 +310,7 @@ const WeeklyContentPage: React.FC = () => {
             }
 
             // Use the replace option to avoid re-rendering issues when going back
-            navigate('/content', { replace: true });
+            navigate('/pregnancy-tracker/content', { replace: true });
         } catch (error: any) {
             console.error('Failed to save weekly content:', error);
             // Show submission error but stay on the current step
@@ -322,7 +322,7 @@ const WeeklyContentPage: React.FC = () => {
 
     const handleGoBack = () => {
         // Use the replace option to avoid re-rendering issues
-        navigate('/content', { replace: true });
+        navigate('/pregnancy-tracker/content', { replace: true });
     };
 
     // Show loading spinner while fetching data

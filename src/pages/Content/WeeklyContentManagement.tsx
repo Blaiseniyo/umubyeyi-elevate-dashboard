@@ -124,15 +124,15 @@ const WeeklyContentManagement: React.FC = () => {
 
   // Navigation functions with {replace: true} to avoid history issues
   const handleAddContent = () => {
-    navigate('/content/weekly/create', { replace: true });
+    navigate('/pregnancy-tracker/content/weekly/create', { replace: true });
   };
 
   const handleEditContent = (content: WeeklyContent) => {
-    navigate(`/content/weekly/${content.id}/edit`, { replace: true });
+    navigate(`/pregnancy-tracker/content/weekly/${content.id}/edit`, { replace: true });
   };
 
   const handleViewContent = (content: WeeklyContent) => {
-    navigate(`/content/weekly/${content.id}/view`, { replace: true });
+    navigate(`/pregnancy-tracker/content/weekly/${content.id}/view`, { replace: true });
   };
 
   const handleDeleteContent = (content: WeeklyContent) => {
