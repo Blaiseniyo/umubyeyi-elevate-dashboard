@@ -1,18 +1,26 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Card,
   CardContent,
   Typography,
   Button,
-  Grid,
-  IconButton,
   Chip,
+  Paper,
+  LinearProgress,
+  TextField,
+  InputAdornment
 } from '@mui/material';
 import {
   Add,
   Edit,
   Delete,
+  Refresh,
+  Search,
+  Visibility,
+  MedicalServices,
+  LightbulbOutlined
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import {
@@ -23,14 +31,13 @@ import { Trimester } from '../../types';
 import LoadingSpinner from '../../components/Common/LoadingSpinner';
 import ErrorMessage from '../../components/Common/ErrorMessage';
 import ConfirmDialog from '../../components/Common/ConfirmDialog';
-import TrimesterDialog from './TrimesterDialog';
 
 const TrimesterManagement: React.FC = () => {
+  const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { trimesters, loading, error } = useAppSelector((state) => state.content);
 
-  const [selectedTrimester, setSelectedTrimester] = useState<Trimester | null>(null);
-  const [trimesterDialogOpen, setTrimesterDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
     title: string;
@@ -44,37 +51,67 @@ const TrimesterManagement: React.FC = () => {
   });
 
   useEffect(() => {
-    // dispatch(getTrimestersAsync());
+    dispatch(getTrimestersAsync());
   }, [dispatch]);
 
+  // Filter trimesters based on search query
+  const filteredTrimesters = trimesters.filter(trimester =>
+    trimester.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    trimester.trimester_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    String(trimester.trimester).includes(searchQuery)
+  );
+
   const handleAddTrimester = () => {
-    setSelectedTrimester(null);
-    setTrimesterDialogOpen(true);
+    navigate('/pregnancy-tracker/content/trimester/create', { replace: true });
   };
 
   const handleEditTrimester = (trimester: Trimester) => {
-    setSelectedTrimester(trimester);
-    setTrimesterDialogOpen(true);
+    navigate(`/pregnancy-tracker/content/trimester/${trimester.id}/edit`, { replace: true });
+  };
+
+  const handleViewTrimester = (trimester: Trimester) => {
+    navigate(`/pregnancy-tracker/content/trimester/${trimester.id}/view`, { replace: true });
   };
 
   const handleDeleteTrimester = (trimester: Trimester) => {
     setConfirmDialog({
       open: true,
       title: 'Delete Trimester',
-      message: `Are you sure you want to delete "${trimester.name}"? This action cannot be undone.`,
+      message: `Are you sure you want to delete "${trimester.trimester_name || `Trimester ${trimester.trimester}`}"? This action cannot be undone.`,
       action: () => {
-        dispatch(deleteTrimesterAsync(trimester.id));
+        dispatch(deleteTrimesterAsync(trimester.id.toString()));
         setConfirmDialog(prev => ({ ...prev, open: false }));
       },
     });
   };
 
-  const handleRefresh = () => {
+  // Update search query from input
+  const handleSearchChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(event.target.value);
+  }, []);
+
+  const handleRefresh = useCallback(() => {
     dispatch(getTrimestersAsync());
+  }, [dispatch]);
+
+  // Format date helper
+  const formatDate = (dateString: string): string => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
   };
 
+  // Function to determine week range text
+  const getWeekRangeText = (trimester: Trimester): string => {
+    return `Weeks ${trimester.start_week}-${trimester.end_week}`;
+  };
+
+  // No longer need truncateText as we're handling rich text directly
+
   if (loading) {
-    return <LoadingSpinner message="Loading trimesters..." />;
+    return <LoadingSpinner message="Loading trimester content..." />;
   }
 
   if (error) {
@@ -85,105 +122,268 @@ const TrimesterManagement: React.FC = () => {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h5" sx={{ fontWeight: 600 }}>
-          Trimester Management
+          Trimester Content Management
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={handleAddTrimester}
-        >
-          Add Trimester
-        </Button>
+
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <TextField
+            placeholder="Search trimesters..."
+            size="small"
+            value={searchQuery}
+            onChange={handleSearchChange}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search fontSize="small" />
+                </InputAdornment>
+              ),
+            }}
+            sx={{ width: 250 }}
+          />
+
+          <Button
+            variant="outlined"
+            startIcon={<Refresh />}
+            onClick={handleRefresh}
+            sx={{ minWidth: 100 }}
+          >
+            Refresh
+          </Button>
+
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={handleAddTrimester}
+            sx={{ minWidth: 150 }}
+          >
+            Add Trimester
+          </Button>
+        </Box>
       </Box>
 
-      <Grid container spacing={3}>
-        {trimesters.map((trimester) => (
-          <Grid item xs={12} md={4} key={trimester.id}>
-            <Card sx={{ height: '100%' }}>
-              <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                  <Box>
-                    <Chip
-                      label={`Trimester ${trimester.number}`}
-                      color="primary"
-                      size="small"
-                      sx={{ mb: 1 }}
-                    />
-                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                      {trimester.name}
-                    </Typography>
+      {filteredTrimesters.length === 0 && !loading ? (
+        <Paper
+          elevation={0}
+          sx={{
+            p: 5,
+            textAlign: 'center',
+            bgcolor: 'background.paper',
+            borderRadius: 2,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+          }}
+        >
+          {searchQuery ? (
+            <>
+              <Typography variant="h6" sx={{ mb: 2, color: 'text.secondary' }}>
+                No trimesters found matching "{searchQuery}"
+              </Typography>
+              <Button variant="outlined" onClick={() => setSearchQuery('')}>
+                Clear Search
+              </Button>
+            </>
+          ) : (
+            <>
+              <Typography variant="h6" sx={{ mb: 2, color: 'text.secondary' }}>
+                No trimester content created yet
+              </Typography>
+              <Button
+                variant="contained"
+                startIcon={<Add />}
+                onClick={handleAddTrimester}
+              >
+                Create First Trimester
+              </Button>
+            </>
+          )}
+        </Paper>
+      ) : (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {filteredTrimesters.map((trimester) => (
+            <Box key={trimester.id}>
+              <Card sx={{
+                borderRadius: 2,
+                boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+                transition: 'transform 0.2s, box-shadow 0.2s',
+                '&:hover': {
+                  transform: 'translateY(-4px)',
+                  boxShadow: '0 12px 25px rgba(0,0,0,0.1)',
+                }
+              }}>
+                <CardContent sx={{ p: 3 }}>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', mx: -1.5 }}>
+                    <Box sx={{ width: { xs: '100%', md: '33.333%' }, p: 1.5 }}>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                          <Chip
+                            label={`Trimester ${trimester.trimester}`}
+                            color="primary"
+                            sx={{
+                              borderRadius: '4px',
+                              fontWeight: 600,
+                              bgcolor: trimester.trimester === 1 ? '#016174' :
+                                trimester.trimester === 2 ? '#4a8a9a' : '#78B7C5'
+                            }}
+                          />
+                          <Chip
+                            label={getWeekRangeText(trimester)}
+                            variant="outlined"
+                            size="small"
+                            sx={{ borderRadius: '4px' }}
+                          />
+                        </Box>
+                        <Typography variant="h5" sx={{ fontWeight: 600, mb: 1 }}>
+                          {trimester.title || trimester.trimester_name}
+                        </Typography>
+
+                        <Box
+                          sx={{
+                            mb: 2,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 4,
+                            WebkitBoxOrient: 'vertical',
+                            color: 'text.secondary',
+                            fontSize: '0.875rem',
+                            lineHeight: 1.43,
+                          }}
+                          dangerouslySetInnerHTML={{
+                            __html: trimester.description || 'No description provided.'
+                          }}
+                        />
+
+                        <Box sx={{ mt: 'auto', display: 'flex', alignItems: 'center' }}>
+                          <Typography variant="caption" color="text.secondary">
+                            Last updated: {formatDate(trimester.updated_at)}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Box>
+
+                    <Box sx={{ width: { xs: '100%', md: '58.333%' }, p: 1.5 }}>
+                      <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', mx: -1 }}>
+                          <Box sx={{ width: { xs: '100%', sm: '50%' }, p: 1 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                              <MedicalServices color="primary" fontSize="small" />
+                              <Box>
+                                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                                  Medical Checks
+                                </Typography>
+                                <Box
+                                  sx={{
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    display: '-webkit-box',
+                                    WebkitLineClamp: 3,
+                                    WebkitBoxOrient: 'vertical',
+                                    color: 'text.secondary',
+                                    fontSize: '0.875rem',
+                                    lineHeight: 1.43,
+                                  }}
+                                  dangerouslySetInnerHTML={{
+                                    __html: trimester.medical_checks || 'No medical checks specified.'
+                                  }}
+                                />
+                              </Box>
+                            </Box>
+                          </Box>
+
+                          <Box sx={{ width: { xs: '100%', sm: '50%' }, p: 1 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                              <LightbulbOutlined color="primary" fontSize="small" />
+                              <Box>
+                                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                                  Tips and Advice
+                                </Typography>
+                                <Box
+                                  sx={{
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    display: '-webkit-box',
+                                    WebkitLineClamp: 3,
+                                    WebkitBoxOrient: 'vertical',
+                                    color: 'text.secondary',
+                                    fontSize: '0.875rem',
+                                    lineHeight: 1.43,
+                                  }}
+                                  dangerouslySetInnerHTML={{
+                                    __html: trimester.tips_and_advice || 'No tips specified.'
+                                  }}
+                                />
+                              </Box>
+                            </Box>
+                          </Box>
+                        </Box>
+
+                        <Box sx={{ mt: 'auto', display: 'flex', justifyContent: 'flex-end', gap: 1, pt: 2 }}>
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            startIcon={<Visibility />}
+                            onClick={() => handleViewTrimester(trimester)}
+                          >
+                            View
+                          </Button>
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            startIcon={<Edit />}
+                            onClick={() => handleEditTrimester(trimester)}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            variant="outlined"
+                            color="error"
+                            size="small"
+                            startIcon={<Delete />}
+                            onClick={() => handleDeleteTrimester(trimester)}
+                          >
+                            Delete
+                          </Button>
+                        </Box>
+                      </Box>
+                    </Box>
+
+                    <Box sx={{ width: { xs: '100%', md: '8.333%' }, p: 1.5 }}>
+                      <Box sx={{ height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                        <Box sx={{ height: '80%', width: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                            <Typography variant="body2" color="text.secondary" align="center">
+                              Weeks
+                            </Typography>
+                            <Typography variant="h4" sx={{ fontWeight: 700, color: '#016174' }}>
+                              {trimester.end_week - trimester.start_week + 1}
+                            </Typography>
+                            <LinearProgress
+                              variant="determinate"
+                              value={100}
+                              sx={{
+                                width: '80%',
+                                height: 8,
+                                borderRadius: 4,
+                                mt: 1,
+                                bgcolor: 'rgba(1, 97, 116, 0.1)',
+                                '& .MuiLinearProgress-bar': {
+                                  bgcolor: trimester.trimester === 1 ? '#016174' :
+                                    trimester.trimester === 2 ? '#4a8a9a' : '#78B7C5'
+                                }
+                              }}
+                            />
+                          </Box>
+                        </Box>
+                      </Box>
+                    </Box>
                   </Box>
-                  <Box>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleEditTrimester(trimester)}
-                    >
-                      <Edit />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      color="error"
-                      onClick={() => handleDeleteTrimester(trimester)}
-                    >
-                      <Delete />
-                    </IconButton>
-                  </Box>
-                </Box>
+                </CardContent>
+              </Card>
+            </Box>
+          ))}
+        </Box>
+      )}
 
-                <Box
-                  sx={{
-                    maxHeight: 150,
-                    overflow: 'hidden',
-                    '& p': { margin: 0 },
-                    '& h1, & h2, & h3, & h4, & h5, & h6': {
-                      fontSize: '1rem',
-                      margin: '0.5rem 0',
-                    },
-                  }}
-                  dangerouslySetInnerHTML={{ __html: trimester.content }}
-                />
 
-                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>
-                  Created: {new Date(trimester.createdAt).toLocaleDateString()}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-
-        {trimesters.length === 0 && (
-          <Grid item xs={12}>
-            <Card>
-              <CardContent sx={{ textAlign: 'center', py: 6 }}>
-                <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
-                  No trimesters created yet
-                </Typography>
-                <Button
-                  variant="contained"
-                  startIcon={<Add />}
-                  onClick={handleAddTrimester}
-                >
-                  Create First Trimester
-                </Button>
-              </CardContent>
-            </Card>
-          </Grid>
-        )}
-      </Grid>
-
-      <TrimesterDialog
-        open={trimesterDialogOpen}
-        trimester={selectedTrimester}
-        onClose={() => {
-          setTrimesterDialogOpen(false);
-          setSelectedTrimester(null);
-        }}
-        onSave={() => {
-          setTrimesterDialogOpen(false);
-          setSelectedTrimester(null);
-          handleRefresh();
-        }}
-      />
 
       <ConfirmDialog
         open={confirmDialog.open}

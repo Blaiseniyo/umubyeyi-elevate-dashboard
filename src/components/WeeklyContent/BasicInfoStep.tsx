@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import { Box, Typography, TextField, Chip, Stack, Card } from '@mui/material';
 import { Info, Lightbulb } from '@mui/icons-material';
-import RichTextEditor from '../Common/RichTextEditor';
+import RichTextEditor from '../../components/Common/richTextEditor/RichTextEditor';
 import { WeeklyContent } from '../../types';
 
 // Define validation errors interface
@@ -104,8 +104,6 @@ const BasicInfoStep: React.FC<BasicInfoStepProps> = ({
                         label="Week Description"
                         value={content?.description || ''}
                         onChange={(value) => onFormChange('description', value)}
-                        height={140}
-                        readOnly={readOnly}
                         placeholder="Describe what's happening during this week of pregnancy..."
                     />
                 </Card>
@@ -121,8 +119,6 @@ const BasicInfoStep: React.FC<BasicInfoStepProps> = ({
                         label="Helpful Tips and Advice"
                         value={content?.tips_and_advice || ''}
                         onChange={(value) => onFormChange('tips_and_advice', value)}
-                        height={120}
-                        readOnly={readOnly}
                         placeholder="Provide helpful tips and advice for this week..."
                     />
                 </Card>

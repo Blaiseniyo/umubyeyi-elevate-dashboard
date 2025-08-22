@@ -1,6 +1,8 @@
 export interface User {
   id: number;
   email: string;
+  is_staff: boolean;
+  is_active: boolean;
   first_name: string;
   last_name: string;
   is_verified: boolean;
@@ -84,10 +86,14 @@ export interface AuthState {
 }
 
 export interface ApiResponse<T> {
-  data: T;
-  message: string;
   success: boolean;
+  message: string;
+  status_code: number;
+  data: T;
 }
+
+// Alias for API response consistency
+export type ApiResponseWrapper<T> = ApiResponse<T>;
 
 export interface PaginatedResponse<T> {
   data: T[];

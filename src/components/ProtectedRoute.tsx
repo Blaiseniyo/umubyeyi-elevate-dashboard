@@ -8,9 +8,9 @@ interface ProtectedRouteProps {
   requiredRole?: 'admin' | 'staff' | 'user';
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
-  children, 
-  requiredRole 
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
+  children,
+  requiredRole
 }) => {
   const location = useLocation();
   const { isAuthenticated, user, loading } = useAppSelector((state) => state.auth);

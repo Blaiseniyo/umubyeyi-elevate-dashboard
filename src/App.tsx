@@ -20,6 +20,7 @@ import Dashboard from './pages/Dashboard';
 import UserManagement from './pages/Users/UserManagement';
 import ContentManagement from './pages/Content/ContentManagement';
 import WeeklyContentPage from './pages/Content/WeeklyContentPage';
+import TrimesterPage from './pages/Content/TrimesterPage';
 import Settings from './pages/Settings';
 
 const AppContent: React.FC = () => {
@@ -48,7 +49,7 @@ const AppContent: React.FC = () => {
           <Route
             path="pregnancy-tracker/content"
             element={
-              <ProtectedRoute requiredRole="user">
+              <ProtectedRoute requiredRole="staff">
                 <ContentManagement />
               </ProtectedRoute>
             }
@@ -56,7 +57,7 @@ const AppContent: React.FC = () => {
           <Route
             path="pregnancy-tracker/content/weekly/create"
             element={
-              <ProtectedRoute requiredRole="user">
+              <ProtectedRoute requiredRole="staff">
                 <WeeklyContentPage />
               </ProtectedRoute>
             }
@@ -64,7 +65,7 @@ const AppContent: React.FC = () => {
           <Route
             path="pregnancy-tracker/content/weekly/:id/edit"
             element={
-              <ProtectedRoute requiredRole="user">
+              <ProtectedRoute requiredRole="staff">
                 <WeeklyContentPage />
               </ProtectedRoute>
             }
@@ -72,8 +73,32 @@ const AppContent: React.FC = () => {
           <Route
             path="pregnancy-tracker/content/weekly/:id/view"
             element={
-              <ProtectedRoute requiredRole="user">
+              <ProtectedRoute requiredRole="staff">
                 <WeeklyContentPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="pregnancy-tracker/content/trimester/create"
+            element={
+              <ProtectedRoute requiredRole="staff">
+                <TrimesterPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="pregnancy-tracker/content/trimester/:id/edit"
+            element={
+              <ProtectedRoute requiredRole="staff">
+                <TrimesterPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="pregnancy-tracker/content/trimester/:id/view"
+            element={
+              <ProtectedRoute requiredRole="staff">
+                <TrimesterPage />
               </ProtectedRoute>
             }
           />

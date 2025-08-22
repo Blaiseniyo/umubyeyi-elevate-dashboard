@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Typography, Stack, Card, CardHeader, CardContent } from '@mui/material';
 import { ChildCare, Image as ImageIcon, MonitorWeight, Height, CameraAlt } from '@mui/icons-material';
-import RichTextEditor from '../Common/RichTextEditor';
+import RichTextEditor from '../../components/Common/richTextEditor/RichTextEditor';
 import ImageUpload from '../Common/ImageUpload';
 import { WeeklyContent } from '../../types';
 
@@ -93,11 +93,8 @@ const BabyDevelopmentStep: React.FC<BabyDevelopmentStepProps> = ({
                                 label="Size Description"
                                 value={content.baby_size_description || ''}
                                 onChange={(value) => onFormChange('baby_size_description', value)}
-                                height={100}
-                                readOnly={isViewMode}
                                 placeholder="Detailed description about the baby's size this week..."
                                 error={!!validationErrors.baby_size_description}
-                                helperText={validationErrors.baby_size_description || ''}
                             />
                         </Stack>
                     </CardContent>
@@ -132,11 +129,8 @@ const BabyDevelopmentStep: React.FC<BabyDevelopmentStepProps> = ({
                                 label="Weight Description"
                                 value={content.baby_weight_description || ''}
                                 onChange={(value) => onFormChange('baby_weight_description', value)}
-                                height={100}
-                                readOnly={isViewMode}
                                 placeholder="Detailed description about the baby's weight this week..."
                                 error={!!validationErrors.baby_weight_description}
-                                helperText={validationErrors.baby_weight_description || ''}
                             />
                         </Stack>
                     </CardContent>
@@ -171,11 +165,8 @@ const BabyDevelopmentStep: React.FC<BabyDevelopmentStepProps> = ({
                                 label="Length Description"
                                 value={content.baby_height_description || ''}
                                 onChange={(value) => onFormChange('baby_height_description', value)}
-                                height={100}
-                                readOnly={isViewMode}
                                 placeholder="Detailed description about the baby's length this week..."
                                 error={!!validationErrors.baby_height_description}
-                                helperText={validationErrors.baby_height_description || ''}
                             />
                         </Stack>
                     </CardContent>
@@ -210,11 +201,8 @@ const BabyDevelopmentStep: React.FC<BabyDevelopmentStepProps> = ({
                                 label="Ultrasound Description"
                                 value={content.ultrasound_description || ''}
                                 onChange={(value) => onFormChange('ultrasound_description', value)}
-                                height={120}
-                                readOnly={isViewMode}
                                 placeholder="What can be seen on an ultrasound this week..."
                                 error={!!validationErrors.ultrasound_description}
-                                helperText={validationErrors.ultrasound_description || ''}
                             />
                         </Stack>
                     </CardContent>

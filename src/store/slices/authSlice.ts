@@ -85,7 +85,7 @@ const authSlice = createSlice({
           firstName: apiUser.first_name,
           lastName: apiUser.last_name,
           status: 'active' as const,
-          role: 'user' as const, // Default role, update based on your needs
+          role: apiUser.is_staff ? 'staff' as const : 'user' as const, // Default role, update based on your needs
         };
         state.token = action.payload.tokens.access;
         state.refreshToken = action.payload.tokens.refresh;

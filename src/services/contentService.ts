@@ -1,5 +1,5 @@
 import { apiService } from './api';
-import { ApiResponse, PaginatedResponse, Trimester, WeeklyContent, Symptom } from '../types';
+import { ApiResponseWrapper, Trimester, WeeklyContent, Symptom } from '../types';
 
 export interface CreateTrimesterRequest {
   trimester: 1 | 2 | 3;
@@ -81,33 +81,26 @@ export interface GetContentParams {
   search?: string;
 }
 
-export interface ApiResponseWrapper<T> {
-  success: boolean;
-  message: string;
-  status_code: number;
-  data: T;
-}
-
 class ContentService {
   // Trimester methods
-  async getTrimesters(): Promise<ApiResponse<Trimester[]>> {
-    return apiService.get<ApiResponse<Trimester[]>>('/content/trimesters');
+  async getTrimesters(): Promise<ApiResponseWrapper<Trimester[]>> {
+    return apiService.get<ApiResponseWrapper<Trimester[]>>('/pregnancy-tracker/staff/trimester-content/');
   }
 
-  async getTrimesterById(id: string): Promise<ApiResponse<Trimester>> {
-    return apiService.get<ApiResponse<Trimester>>(`/content/trimesters/${id}`);
+  async getTrimesterById(id: string): Promise<ApiResponseWrapper<Trimester>> {
+    return apiService.get<ApiResponseWrapper<Trimester>>(`/pregnancy-tracker/staff/trimester-content/${id}/`);
   }
 
-  async createTrimester(data: CreateTrimesterRequest): Promise<ApiResponse<Trimester>> {
-    return apiService.post<ApiResponse<Trimester>>('/content/trimesters', data);
+  async createTrimester(data: CreateTrimesterRequest): Promise<ApiResponseWrapper<Trimester>> {
+    return apiService.post<ApiResponseWrapper<Trimester>>('/pregnancy-tracker/staff/trimester-content/', data);
   }
 
-  async updateTrimester(id: string, data: UpdateTrimesterRequest): Promise<ApiResponse<Trimester>> {
-    return apiService.put<ApiResponse<Trimester>>(`/content/trimesters/${id}`, data);
+  async updateTrimester(id: string, data: UpdateTrimesterRequest): Promise<ApiResponseWrapper<Trimester>> {
+    return apiService.put<ApiResponseWrapper<Trimester>>(`/pregnancy-tracker/staff/trimester-content/${id}/`, data);
   }
 
-  async deleteTrimester(id: string): Promise<ApiResponse<void>> {
-    return apiService.delete<ApiResponse<void>>(`/content/trimesters/${id}`);
+  async deleteTrimester(id: string): Promise<ApiResponseWrapper<void>> {
+    return apiService.delete<ApiResponseWrapper<void>>(`/pregnancy-tracker/staff/trimester-content/${id}/`);
   }
 
   // Weekly content methods
@@ -147,13 +140,15 @@ class ContentService {
   }
 
   // Symptom methods
-  async getSymptoms(weekNumber?: number): Promise<ApiResponse<Symptom[]>> {
-    const url = weekNumber ? `/content/symptoms?week=${weekNumber}` : '/content/symptoms';
-    return apiService.get<ApiResponse<Symptom[]>>(url);
+  async getSymptoms(weekNumber?: number): Promise<ApiResponseWrapper<Symptom[]>> {
+    const url = weekNumber 
+      ? `/pregnancy-tracker/staff/symptoms/?week=${weekNumber}` 
+      : '/pregnancy-tracker/staff/symptoms/';
+    return apiService.get<ApiResponseWrapper<Symptom[]>>(url);
   }
 
-  async deleteSymptom(id: string): Promise<ApiResponse<void>> {
-    return apiService.delete<ApiResponse<void>>(`/content/symptoms/${id}`);
+  async deleteSymptom(id: string): Promise<ApiResponseWrapper<void>> {
+    return apiService.delete<ApiResponseWrapper<void>>(`/pregnancy-tracker/staff/symptoms/${id}/`);
   }
 }
 

@@ -1,10 +1,10 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { contentService } from '../../services/contentService';
 import { WeeklyContent, Trimester } from '../../types';
-import toastService from '../../services/toastService';
-import type { 
-  GetContentParams, 
-  CreateWeeklyContentRequest, 
+// import toastService from '../../services/toastService';
+import type {
+  GetContentParams,
+  CreateWeeklyContentRequest,
   UpdateWeeklyContentRequest,
   CreateTrimesterRequest,
   UpdateTrimesterRequest
@@ -45,6 +45,9 @@ export const getWeeklyContentAsync = createAsyncThunk(
   async (params: GetContentParams | undefined, { rejectWithValue }) => {
     try {
       const response = await contentService.getWeeklyContent(params);
+      if (!response.success) {
+        return rejectWithValue(response.message || 'Failed to fetch weekly content');
+      }
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch weekly content');
@@ -57,6 +60,9 @@ export const getWeeklyContentByIdAsync = createAsyncThunk(
   async (id: number, { rejectWithValue }) => {
     try {
       const response = await contentService.getWeeklyContentById(id);
+      if (!response.success) {
+        return rejectWithValue(response.message || 'Failed to fetch weekly content details');
+      }
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch weekly content details');
@@ -69,7 +75,10 @@ export const createWeeklyContentAsync = createAsyncThunk(
   async (data: CreateWeeklyContentRequest, { rejectWithValue }) => {
     try {
       const response = await contentService.createWeeklyContent(data);
-      toastService.success('Weekly content created successfully');
+      if (!response.success) {
+        return rejectWithValue(response.message || 'Failed to create weekly content');
+      }
+      // toastService.success('Weekly content created successfully');
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to create weekly content');
@@ -82,7 +91,10 @@ export const updateWeeklyContentAsync = createAsyncThunk(
   async ({ id, data }: { id: number; data: UpdateWeeklyContentRequest }, { rejectWithValue }) => {
     try {
       const response = await contentService.updateWeeklyContent(id, data);
-      toastService.success('Weekly content updated successfully');
+      if (!response.success) {
+        return rejectWithValue(response.message || 'Failed to update weekly content');
+      }
+      // toastService.success('Weekly content updated successfully');
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to update weekly content');
@@ -94,8 +106,11 @@ export const deleteWeeklyContentAsync = createAsyncThunk(
   'content/deleteWeeklyContent',
   async (id: number, { rejectWithValue }) => {
     try {
-      await contentService.deleteWeeklyContent(id);
-      toastService.success('Weekly content deleted successfully');
+      const response = await contentService.deleteWeeklyContent(id);
+      if (!response.success) {
+        return rejectWithValue(response.message || 'Failed to delete weekly content');
+      }
+      // toastService.success('Weekly content deleted successfully');
       return id;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to delete weekly content');
@@ -109,9 +124,27 @@ export const getTrimestersAsync = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await contentService.getTrimesters();
+      if (!response.success) {
+        return rejectWithValue(response.message || 'Failed to fetch trimesters');
+      }
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch trimesters');
+    }
+  }
+);
+
+export const getTrimesterByIdAsync = createAsyncThunk(
+  'content/getTrimesterById',
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const response = await contentService.getTrimesterById(id);
+      if (!response.success) {
+        return rejectWithValue(response.message || 'Failed to fetch trimester details');
+      }
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch trimester details');
     }
   }
 );
@@ -121,7 +154,10 @@ export const createTrimesterAsync = createAsyncThunk(
   async (data: CreateTrimesterRequest, { rejectWithValue }) => {
     try {
       const response = await contentService.createTrimester(data);
-      toastService.success('Trimester created successfully');
+      if (!response.success) {
+        return rejectWithValue(response.message || 'Failed to create trimester');
+      }
+      // toastService.success('Trimester created successfully');
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to create trimester');
@@ -134,7 +170,10 @@ export const updateTrimesterAsync = createAsyncThunk(
   async ({ id, data }: { id: string; data: UpdateTrimesterRequest }, { rejectWithValue }) => {
     try {
       const response = await contentService.updateTrimester(id, data);
-      toastService.success('Trimester updated successfully');
+      if (!response.success) {
+        return rejectWithValue(response.message || 'Failed to update trimester');
+      }
+      // toastService.success('Trimester updated successfully');
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to update trimester');
@@ -146,8 +185,11 @@ export const deleteTrimesterAsync = createAsyncThunk(
   'content/deleteTrimester',
   async (id: string, { rejectWithValue }) => {
     try {
-      await contentService.deleteTrimester(id);
-      toastService.success('Trimester deleted successfully');
+      const response = await contentService.deleteTrimester(id);
+      if (!response.success) {
+        return rejectWithValue(response.message || 'Failed to delete trimester');
+      }
+      // toastService.success('Trimester deleted successfully');
       return id;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to delete trimester');
@@ -264,6 +306,21 @@ const contentSlice = createSlice({
         state.trimesters = action.payload;
       })
       .addCase(getTrimestersAsync.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      });
+
+    // Get trimester by ID
+    builder
+      .addCase(getTrimesterByIdAsync.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getTrimesterByIdAsync.fulfilled, (state) => {
+        state.loading = false;
+        // Note: We don't need to store the single trimester in state as it's handled by the component
+      })
+      .addCase(getTrimesterByIdAsync.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

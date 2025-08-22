@@ -34,7 +34,7 @@ export interface ApiResponseWrapper<T> {
 
 class AuthService {
   async login(credentials: LoginRequest): Promise<ApiResponseWrapper<LoginResponse>> {
-    return apiService.post<ApiResponseWrapper<LoginResponse>>('/auth/signin/', credentials);
+    return apiService.post<ApiResponseWrapper<LoginResponse>>('/auth/staff/signin/', credentials);
   }
 
   async refreshToken(refreshToken: string): Promise<ApiResponseWrapper<RefreshTokenResponse>> {

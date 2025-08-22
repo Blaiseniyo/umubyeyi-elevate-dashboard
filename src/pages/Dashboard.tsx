@@ -28,6 +28,7 @@ import {
 import Chart from 'react-apexcharts';
 import { ApexOptions } from 'apexcharts';
 import { useAppDispatch, useAppSelector } from '../hooks';
+import RichTextEditor from '../components/Common/richTextEditor/RichTextEditor';
 
 interface StatCardProps {
   title: string;

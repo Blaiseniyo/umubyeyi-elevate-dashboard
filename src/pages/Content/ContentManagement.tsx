@@ -15,6 +15,7 @@ interface TabPanelProps {
 }
 
 const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => {
+
   return (
     <div
       role="tabpanel"
@@ -28,9 +29,16 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => {
 };
 
 const ContentManagement: React.FC = () => {
-  const [tabValue, setTabValue] = useState(0);
+  // get tab query parameter from URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const initialTab = urlParams.get('tab') === 'trimesters' ? 1 : 0;
+  const [tabValue, setTabValue] = useState(initialTab);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    // Update the URL with the new tab value
+    const newParams = new URLSearchParams(window.location.search);
+    newParams.set('tab', newValue === 1 ? 'trimesters' : 'weekly');
+    window.history.replaceState({}, '', `${window.location.pathname}?${newParams.toString()}`);
     setTabValue(newValue);
   };
 

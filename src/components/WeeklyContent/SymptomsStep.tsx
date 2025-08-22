@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import { Box, Typography, Button, Stack, Card, CardHeader, CardContent, IconButton, TextField } from '@mui/material';
 import { Psychology, Add, Delete } from '@mui/icons-material';
-import RichTextEditor from '../Common/RichTextEditor';
+import RichTextEditor from '../../components/Common/richTextEditor/RichTextEditor';
 import ImageUpload from '../Common/ImageUpload';
 import { WeeklyContent } from '../../types';
 
@@ -174,8 +174,6 @@ const SymptomsStep: React.FC<SymptomsStepProps> = ({
                                         label="Symptom Description"
                                         value={symptom.description || ''}
                                         onChange={(value) => handleSymptomChange(index, 'description', value)}
-                                        height={100}
-                                        readOnly={isViewMode}
                                         placeholder="Describe what the mother might experience..."
                                     />
                                 </Stack>
