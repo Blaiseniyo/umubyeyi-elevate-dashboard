@@ -46,29 +46,38 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     });
 
     const handleNewImageFiles = useCallback(
-        (files: File[], insertPosition?: number): void => {
+        async (files: File[], insertPosition?: number): Promise<void> => {
             if (!rteRef.current?.editor) {
                 return;
             }
 
-            // For the sake of a demo, we don't have a server to upload the files to,
-            // so we'll instead convert each one to a local "temporary" object URL.
-            // This will not persist properly in a production setting. You should
-            // instead upload the image files to your server, or perhaps convert the
-            // images to bas64 if you would like to encode the image data directly
-            // into the editor content, though that can make the editor content very
-            // large. You will probably want to use the same upload function here as
-            // for the MenuButtonImageUpload `onUploadFiles` prop.
-            const attributesForImageFiles = files.map((file) => ({
-                src: URL.createObjectURL(file),
-                alt: file.name,
-            }));
+            // Convert files to base64 instead of using object URLs
+            const fileToBase64 = async (file: File): Promise<string> => {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result as string);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+            };
 
-            insertImages({
-                images: attributesForImageFiles,
-                editor: rteRef.current.editor,
-                position: insertPosition,
-            });
+            try {
+                // Process all files and get their base64 representations
+                const attributesPromises = files.map(async (file) => ({
+                    src: await fileToBase64(file),
+                    alt: file.name,
+                }));
+
+                const attributesForImageFiles = await Promise.all(attributesPromises);
+
+                insertImages({
+                    images: attributesForImageFiles,
+                    editor: rteRef.current.editor,
+                    position: insertPosition,
+                });
+            } catch (error) {
+                console.error("Error converting images to base64:", error);
+            }
         },
         []
     );
@@ -170,7 +179,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
                     MenuBarProps: {
                         hide: !true,
                     },
-                    sx:{
+                    sx: {
                         paddingLeft: 2090,
                         borderColor: error ? 'error.main' : 'divider',
                         borderRadius: 1,
