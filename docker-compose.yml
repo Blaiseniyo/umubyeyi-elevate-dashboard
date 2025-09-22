@@ -5,13 +5,12 @@ services:
         build:
             context: .
             dockerfile: Dockerfile
-            container_name: umubyeyi-elevate-dashboard
-            ports:
-                - "5173:8080"
-            environment:
-                - VITE_API_URL=${VITE_API_URL}
-            networks:
-                - umubyeyi_shared_network
+        ports:
+            - "5173:8080"
+        environment:
+            - VITE_API_URL=${VITE_API_URL}
+        networks:
+            - umubyeyi_shared_network
     # If you need to connect to a backend service on the host machine (development)
     # extra_hosts:
     #  - "host.docker.internal:host-gateway"
