@@ -11,13 +11,18 @@ import {
     IconButton,
     Stack,
     Alert,
-    Card
+    Card,
+    Stepper,
+    Step,
+    StepLabel,
+    Divider,
 } from '@mui/material';
 import { ArrowBack, Save } from '@mui/icons-material';
 import { useAppDispatch } from '../../hooks';
 import { createTrimesterAsync, updateTrimesterAsync, getTrimesterByIdAsync } from '../../store/slices/contentSlice';
 import LoadingSpinner from '../../components/Common/LoadingSpinner';
 import RichTextEditor from '../../components/Common/richTextEditor/RichTextEditor';
+import TrimesterSymptomsStep from '../../components/WeeklyContent/TrimesterSymptomsStep';
 
 interface FormData {
     trimester: 1 | 2 | 3;
@@ -26,12 +31,36 @@ interface FormData {
     description: string;
     start_week: number;
     end_week: number;
-    medical_checks: string;
-    tips_and_advice: string;
+    fetal_development: string;
+    baby_size: string;
+    symptoms: Array<{
+        id?: number;
+        name: string;
+        description: string;
+        image_url: string;
+        signed_image_url?: string;
+        trimester_number?: number;
+        trimester_name?: string;
+    }>;
 }
 
 // Define validation errors interface for the form
-interface ValidationErrors extends Partial<Record<keyof FormData, string>> { }
+interface ValidationErrors {
+    trimester?: string;
+    trimester_name?: string;
+    title?: string;
+    description?: string;
+    start_week?: string;
+    end_week?: string;
+    fetal_development?: string;
+    baby_size?: string;
+    symptoms?: {
+        [index: number]: {
+            name?: string;
+            image_url?: string;
+        }
+    }
+}
 
 // Define the week ranges for each trimester
 const TRIMESTER_RANGES = {
@@ -47,8 +76,9 @@ const defaultTrimester: FormData = {
     description: '',
     start_week: 1,
     end_week: 12,
-    medical_checks: '',
-    tips_and_advice: '',
+    fetal_development: '',
+    baby_size: '',
+    symptoms: []
 };
 
 const TrimesterPage: React.FC = () => {
@@ -67,6 +97,7 @@ const TrimesterPage: React.FC = () => {
     const [errors, setErrors] = useState<ValidationErrors>({});
     const [fetchError, setFetchError] = useState<string | null>(null);
     const [submissionError, setSubmissionError] = useState<string | null>(null);
+    const [activeStep, setActiveStep] = useState(0);
 
     const isViewMode = mode === 'view';
     const isEditMode = mode === 'edit';
@@ -89,8 +120,9 @@ const TrimesterPage: React.FC = () => {
                         description: response.description || '',
                         start_week: response.start_week || TRIMESTER_RANGES[response.trimester].start,
                         end_week: response.end_week || TRIMESTER_RANGES[response.trimester].end,
-                        medical_checks: response.medical_checks || '',
-                        tips_and_advice: response.tips_and_advice || '',
+                        fetal_development: response.fetal_development || '',
+                        baby_size: response.baby_size || '',
+                        symptoms: response.symptoms || []
                     });
                 } catch (error: any) {
                     console.error('Failed to fetch trimester details:', error);
@@ -108,8 +140,9 @@ const TrimesterPage: React.FC = () => {
                     description: '',
                     start_week: TRIMESTER_RANGES[defaultTrimester].start,
                     end_week: TRIMESTER_RANGES[defaultTrimester].end,
-                    medical_checks: '',
-                    tips_and_advice: '',
+                    fetal_development: '',
+                    baby_size: '',
+                    symptoms: []
                 });
             }
         };
@@ -186,45 +219,112 @@ const TrimesterPage: React.FC = () => {
         }
     };
 
-    const validateForm = (): boolean => {
+    // Handle step navigation
+    const handleNextStep = () => {
+        const isValid = validateStep(activeStep);
+        if (isValid) {
+            setActiveStep((prevStep) => Math.min(prevStep + 1, 2));
+        }
+    };
+
+    const handlePrevStep = () => {
+        setActiveStep((prevStep) => Math.max(prevStep - 1, 0));
+    };
+
+    // Handle symptom updates
+    const handleSymptomsUpdate = (updatedSymptoms: FormData['symptoms']) => {
+        setFormData((prev) => ({
+            ...prev,
+            symptoms: updatedSymptoms
+        }));
+
+        // Clear any symptom validation errors
+        if (errors.symptoms) {
+            setErrors(prev => ({
+                ...prev,
+                symptoms: undefined
+            }));
+        }
+    };
+
+    // Validate specific step
+    const validateStep = (step: number): boolean => {
+        let stepValid = true;
         const newErrors: ValidationErrors = {};
 
-        if (!formData.trimester_name.trim()) {
-            newErrors.trimester_name = 'Trimester name is required';
-        }
+        if (step === 0) {
+            // Basic information validation
+            if (!formData.trimester_name.trim()) {
+                newErrors.trimester_name = 'Trimester name is required';
+                stepValid = false;
+            }
 
-        if (!formData.title.trim()) {
-            newErrors.title = 'Title is required';
-        }
+            if (!formData.title.trim()) {
+                newErrors.title = 'Title is required';
+                stepValid = false;
+            }
 
-        if (formData.start_week < 1 || formData.start_week > 42) {
-            newErrors.start_week = 'Start week must be between 1 and 42';
-        }
+            if (formData.start_week < 1 || formData.start_week > 42) {
+                newErrors.start_week = 'Start week must be between 1 and 42';
+                stepValid = false;
+            }
 
-        if (formData.end_week < 1 || formData.end_week > 42) {
-            newErrors.end_week = 'End week must be between 1 and 42';
-        }
+            if (formData.end_week < 1 || formData.end_week > 42) {
+                newErrors.end_week = 'End week must be between 1 and 42';
+                stepValid = false;
+            }
 
-        if (formData.start_week >= formData.end_week) {
-            newErrors.start_week = 'Start week must be less than end week';
-        }
+            if (formData.start_week >= formData.end_week) {
+                newErrors.start_week = 'Start week must be less than end week';
+                stepValid = false;
+            }
 
-        // // Helper function to check if a rich text field has content
-        // const hasContent = (html: string | undefined): boolean => {
-        //     if (!html) return false;
-        //     // Remove HTML tags and check if there's actual text
-        //     const text = html.replace(/<[^>]*>/g, '').trim();
-        //     return text.length > 0;
-        // };
+            const descriptionText = formData.description.replace(/<[^>]*>/g, '').trim();
+            if (!descriptionText) {
+                newErrors.description = 'Description is required';
+                stepValid = false;
+            }
+        } else if (step === 1) {
+            // Symptoms validation - only validate if there are symptoms
+            if (formData.symptoms.length > 0) {
+                const symptomErrors: ValidationErrors['symptoms'] = {};
+                let hasSymptomError = false;
 
-        // Only check if description is empty when considering it a required field
-        const descriptionText = formData.description.replace(/<[^>]*>/g, '').trim();
-        if (!descriptionText) {
-            newErrors.description = 'Description is required';
+                formData.symptoms.forEach((symptom, index) => {
+                    const symptomError: { name?: string; image_url?: string } = {};
+
+                    if (!symptom.name.trim()) {
+                        symptomError.name = 'Symptom name is required';
+                        hasSymptomError = true;
+                    }
+
+                    if (!symptom.image_url.trim()) {
+                        symptomError.image_url = 'Symptom image is required';
+                        hasSymptomError = true;
+                    }
+
+                    if (Object.keys(symptomError).length > 0) {
+                        symptomErrors[index] = symptomError;
+                    }
+                });
+
+                if (hasSymptomError) {
+                    newErrors.symptoms = symptomErrors;
+                    stepValid = false;
+                }
+            }
         }
 
         setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
+        return stepValid;
+    };
+
+    const validateForm = (): boolean => {
+        // Validate all steps
+        const basicInfoValid = validateStep(0);
+        const symptomsValid = validateStep(1);
+
+        return basicInfoValid && symptomsValid;
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -350,6 +450,20 @@ const TrimesterPage: React.FC = () => {
                     )}
                 </Box>
 
+                {/* Stepper for non-view mode */}
+                {!isViewMode && (
+                    <Box sx={{ p: 3, borderBottom: '1px solid', borderColor: 'divider' }}>
+                        <Stepper activeStep={activeStep} alternativeLabel>
+                            <Step>
+                                <StepLabel>Basic Information</StepLabel>
+                            </Step>
+                            <Step>
+                                <StepLabel>Trimester Symptoms</StepLabel>
+                            </Step>
+                        </Stepper>
+                    </Box>
+                )}
+
                 {/* Form content */}
                 <form onSubmit={handleSubmit}>
                     <Box sx={{ p: 3 }}>
@@ -357,137 +471,167 @@ const TrimesterPage: React.FC = () => {
                             <Alert severity="error" sx={{ mb: 3 }}>{submissionError}</Alert>
                         )}
 
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                            <TextField
-                                fullWidth
-                                select
-                                label="Trimester"
-                                name="trimester"
-                                value={formData.trimester}
-                                onChange={handleChange}
-                                required
-                                disabled={isViewMode || !!id} // Don't allow changing trimester for existing entries or in view mode
-                            >
-                                <MenuItem value={1}>First Trimester (Weeks 1-12)</MenuItem>
-                                <MenuItem value={2}>Second Trimester (Weeks 13-27)</MenuItem>
-                                <MenuItem value={3}>Third Trimester (Weeks 28-42)</MenuItem>
-                            </TextField>
-
-                            <TextField
-                                fullWidth
-                                label="Trimester Name"
-                                name="trimester_name"
-                                value={formData.trimester_name}
-                                onChange={handleChange}
-                                required
-                                placeholder="e.g., First Trimester"
-                                error={!!errors.trimester_name}
-                                helperText={errors.trimester_name}
-                                disabled={isViewMode}
-                            />
-
-                            <TextField
-                                fullWidth
-                                label="Title"
-                                name="title"
-                                value={formData.title}
-                                onChange={handleChange}
-                                required
-                                placeholder="e.g., Beginning of Your Pregnancy Journey"
-                                error={!!errors.title}
-                                helperText={errors.title}
-                                disabled={isViewMode}
-                            />
-
-                            <Box sx={{ display: 'flex', gap: 2 }}>
+                        {/* Step 0: Basic Information */}
+                        {(activeStep === 0 || isViewMode) && (
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                                 <TextField
                                     fullWidth
-                                    type="number"
-                                    label="Start Week"
-                                    name="start_week"
-                                    value={formData.start_week}
+                                    select
+                                    label="Trimester"
+                                    name="trimester"
+                                    value={formData.trimester}
                                     onChange={handleChange}
                                     required
-                                    error={!!errors.start_week}
-                                    helperText={errors.start_week}
-                                    disabled={isViewMode}
-                                />
+                                    disabled={isViewMode || !!id} // Don't allow changing trimester for existing entries or in view mode
+                                >
+                                    <MenuItem value={1}>First Trimester (Weeks 1-12)</MenuItem>
+                                    <MenuItem value={2}>Second Trimester (Weeks 13-27)</MenuItem>
+                                    <MenuItem value={3}>Third Trimester (Weeks 28-42)</MenuItem>
+                                </TextField>
 
                                 <TextField
                                     fullWidth
-                                    type="number"
-                                    label="End Week"
-                                    name="end_week"
-                                    value={formData.end_week}
+                                    label="Trimester Name"
+                                    name="trimester_name"
+                                    value={formData.trimester_name}
                                     onChange={handleChange}
                                     required
-                                    error={!!errors.end_week}
-                                    helperText={errors.end_week}
+                                    placeholder="e.g., First Trimester"
+                                    error={!!errors.trimester_name}
+                                    helperText={errors.trimester_name}
                                     disabled={isViewMode}
                                 />
-                            </Box>
-                            <Card variant="outlined" sx={{ p: 3, maxWidth: 1207, margin: "0 auto" }}>
-                                <RichTextEditor
-                                    label="Description"
-                                    value={formData.description || ""}
-                                    onChange={(value) => handleRichTextChange('description', value)}
-                                    placeholder="Enter a detailed description of this trimester..."
-                                    error={!!errors.description}
-                                />
-                            </Card>
 
-
-                            <Box sx={{ bgcolor: '#f5f5f5', p: 2, borderRadius: 1 }}>
                                 <TextField
                                     fullWidth
-                                    multiline
-                                    rows={3}
-                                    label="Medical Checks"
-                                    name="medical_checks"
-                                    value={formData.medical_checks}
+                                    label="Title"
+                                    name="title"
+                                    value={formData.title}
                                     onChange={handleChange}
-                                    placeholder="Enter recommended medical checks for this trimester..."
-                                    error={!!errors.medical_checks}
-                                    helperText={errors.medical_checks}
-                                    variant="outlined"
+                                    required
+                                    placeholder="e.g., Beginning of Your Pregnancy Journey"
+                                    error={!!errors.title}
+                                    helperText={errors.title}
                                     disabled={isViewMode}
                                 />
-                            </Box>
 
-                            <Box sx={{ bgcolor: '#f5f5f5', p: 2, borderRadius: 1 }}>
-                                <TextField
-                                    fullWidth
-                                    multiline
-                                    rows={3}
-                                    label="Tips and Advice"
-                                    name="tips_and_advice"
-                                    value={formData.tips_and_advice}
-                                    onChange={handleChange}
-                                    placeholder="Enter helpful tips and advice for mothers during this trimester..."
-                                    error={!!errors.tips_and_advice}
-                                    helperText={errors.tips_and_advice}
-                                    variant="outlined"
-                                    disabled={isViewMode}
+                                <Box sx={{ display: 'flex', gap: 2 }}>
+                                    <TextField
+                                        fullWidth
+                                        type="number"
+                                        label="Start Week"
+                                        name="start_week"
+                                        value={formData.start_week}
+                                        onChange={handleChange}
+                                        required
+                                        error={!!errors.start_week}
+                                        helperText={errors.start_week}
+                                        disabled={isViewMode}
+                                    />
+
+                                    <TextField
+                                        fullWidth
+                                        type="number"
+                                        label="End Week"
+                                        name="end_week"
+                                        value={formData.end_week}
+                                        onChange={handleChange}
+                                        required
+                                        error={!!errors.end_week}
+                                        helperText={errors.end_week}
+                                        disabled={isViewMode}
+                                    />
+                                </Box>
+                                <Card variant="outlined" sx={{ p: 3 }}>
+                                    <RichTextEditor
+                                        label="Description"
+                                        value={formData.description || ""}
+                                        onChange={(value) => handleRichTextChange('description', value)}
+                                        placeholder="Enter a detailed description of this trimester..."
+                                        error={!!errors.description}
+                                    />
+                                </Card>
+
+                                <Card variant="outlined" sx={{ p: 3 }}>
+                                    <RichTextEditor
+                                        label="Fetal Development"
+                                        value={formData.fetal_development || ""}
+                                        onChange={(value) => handleRichTextChange('fetal_development', value)}
+                                        placeholder="Describe the fetal development during this trimester..."
+                                    />
+                                </Card>
+
+                                <Card variant="outlined" sx={{ p: 3 }}>
+                                    <RichTextEditor
+                                        label="Baby Size"
+                                        value={formData.baby_size || ""}
+                                        onChange={(value) => handleRichTextChange('baby_size', value)}
+                                        placeholder="Describe the baby's size during this trimester..."
+                                    />
+                                </Card>
+
+
+                            </Box>
+                        )}
+
+                        {/* Step 1: Symptoms */}
+                        {(activeStep === 1 || isViewMode) && (
+                            <Box sx={{ mt: isViewMode ? 4 : 0 }}>
+                                {isViewMode && <Divider sx={{ my: 4 }} />}
+                                <TrimesterSymptomsStep
+                                    symptoms={formData.symptoms}
+                                    onSymptomUpdate={handleSymptomsUpdate}
+                                    isViewMode={isViewMode}
+                                    validationErrors={errors.symptoms}
                                 />
                             </Box>
-                        </Box>
+                        )}
 
+                        {/* Navigation buttons */}
                         {!isViewMode && (
-                            <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                            <Box sx={{ mt: 4, display: 'flex', justifyContent: 'space-between', gap: 2 }}>
+                                <Button
+                                    variant="outlined"
+                                    onClick={activeStep === 0 ? handleGoBack : handlePrevStep}
+                                    disabled={loading}
+                                >
+                                    {activeStep === 0 ? 'Cancel' : 'Previous'}
+                                </Button>
+
+                                <Box>
+                                    {activeStep === 1 && (
+                                        <Button
+                                            type="submit"
+                                            variant="contained"
+                                            color="primary"
+                                            disabled={loading}
+                                            sx={{ ml: 2 }}
+                                        >
+                                            {isEditMode ? 'Update' : 'Create'} Trimester Content
+                                        </Button>
+                                    )}
+
+                                    {activeStep === 0 && (
+                                        <Button
+                                            variant="contained"
+                                            onClick={handleNextStep}
+                                            disabled={loading}
+                                        >
+                                            Next: Symptoms
+                                        </Button>
+                                    )}
+                                </Box>
+                            </Box>
+                        )}
+
+                        {/* View mode actions */}
+                        {isViewMode && (
+                            <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end' }}>
                                 <Button
                                     variant="outlined"
                                     onClick={handleGoBack}
-                                    disabled={loading}
                                 >
-                                    Cancel
-                                </Button>
-                                <Button
-                                    type="submit"
-                                    variant="contained"
-                                    color="primary"
-                                    disabled={loading}
-                                >
-                                    {isEditMode ? 'Update' : 'Create'} Trimester Content
+                                    Back to List
                                 </Button>
                             </Box>
                         )}

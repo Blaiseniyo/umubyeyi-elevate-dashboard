@@ -12,19 +12,16 @@ const defaultContent: Partial<WeeklyContent> = {
     week: 0,
     title: '',
     description: '',
-    baby_size: '',
     baby_size_image_url: '',
     baby_size_description: '',
-    baby_weight: '',
     baby_weight_image_url: '',
     baby_weight_description: '',
-    baby_height: '',
-    baby_height_image_url: '',
-    baby_height_description: '',
     ultrasound_image_url: '',
     ultrasound_description: '',
-    tips_and_advice: '',
-    symptoms: []
+    what_you_might_feel: '',
+    what_you_might_feel_image_url: '',
+    body_changes: '',
+    body_changes_image_url: ''
 };
 
 // Define validation error interface
@@ -36,17 +33,8 @@ interface ValidationErrors {
     baby_size_description?: string;
     baby_weight_image_url?: string;
     baby_weight_description?: string;
-    baby_height_image_url?: string;
-    baby_height_description?: string;
     ultrasound_image_url?: string;
     ultrasound_description?: string;
-    // Symptoms validation fields
-    symptoms?: {
-        [index: number]: {
-            name?: string;
-            image_url?: string;
-        }
-    }
 }
 
 const WeeklyContentPage: React.FC = () => {
@@ -94,8 +82,7 @@ const WeeklyContentPage: React.FC = () => {
                     const completeContent = {
                         ...defaultContent,
                         ...response,
-                        // Ensure symptoms is always an array
-                        symptoms: response.symptoms || []
+                        // No symptoms field anymore
                     };
 
                     setContent(completeContent);
@@ -176,14 +163,6 @@ const WeeklyContentPage: React.FC = () => {
                 errors.baby_weight_description = 'Baby weight description is required';
             }
 
-            if (!content.baby_height_image_url) {
-                errors.baby_height_image_url = 'Baby length image is required';
-            }
-
-            if (!hasContent(content.baby_height_description)) {
-                errors.baby_height_description = 'Baby length description is required';
-            }
-
             if (!content.ultrasound_image_url) {
                 errors.ultrasound_image_url = 'Ultrasound image is required';
             }
@@ -192,39 +171,7 @@ const WeeklyContentPage: React.FC = () => {
                 errors.ultrasound_description = 'Ultrasound description is required';
             }
         }
-        else if (step === 2) {
-            // Symptoms step validation
-            const symptomErrors: { [index: number]: { name?: string; image_url?: string } } = {};
-            let hasErrors = false;
-
-            // Only validate if there are symptoms
-            if (content.symptoms && content.symptoms.length > 0) {
-                content.symptoms.forEach((symptom, index) => {
-                    const symptomError: { name?: string; image_url?: string } = {};
-
-                    // Validate name
-                    if (!symptom.name || !symptom.name.trim()) {
-                        symptomError.name = 'Symptom name is required';
-                        hasErrors = true;
-                    }
-
-                    // Validate image
-                    if (!symptom.image_url && !symptom.signed_image_url) {
-                        symptomError.image_url = 'Symptom image is required';
-                        hasErrors = true;
-                    }
-
-                    // Only add symptom errors if there are any
-                    if (Object.keys(symptomError).length > 0) {
-                        symptomErrors[index] = symptomError;
-                    }
-                });
-            }
-
-            if (hasErrors) {
-                errors.symptoms = symptomErrors;
-            }
-        }
+        // Removed symptoms step validation
 
         // Store validation errors
         setValidationErrors(errors);
@@ -263,13 +210,7 @@ const WeeklyContentPage: React.FC = () => {
         setPageLoading(true);
 
         try {
-            // Helper function to check if a rich text field has content
-            const hasContent = (html: string) => {
-                if (!html) return false;
-                // Remove HTML tags and check if there's actual text
-                const text = html.replace(/<[^>]*>/g, '').trim();
-                return text.length > 0;
-            };
+
 
             // Validate that week is a valid number
             if (content.week === undefined || content.week <= 0) {
@@ -278,25 +219,10 @@ const WeeklyContentPage: React.FC = () => {
                 return;
             }
 
-            // Filter valid symptoms before submitting
-            const validSymptoms = (content.symptoms || [])
-                .filter(symptom =>
-                    symptom.name?.trim() &&
-                    (symptom.image_url && symptom.image_url.trim().length > 0)
-                )
-                .map(symptom => ({
-                    id: symptom.id,
-                    name: symptom.name,
-                    description: symptom.description,
-                    image_url: symptom.image_url || '',
-                    signed_image_url: undefined
-                }));
-
+            // No symptoms to filter anymore
             const submitData = {
                 ...content,
-                week: content.week,
-                baby_length: content.baby_height,
-                symptoms: validSymptoms,
+                week: content.week
             };
 
             if (isEditMode && content.id) {

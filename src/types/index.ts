@@ -31,10 +31,21 @@ export interface Trimester {
   description?: string;
   start_week: number;
   end_week: number;
-  medical_checks?: string;
-  tips_and_advice?: string;
+  fetal_development?: string;
+  baby_size?: string;
+  symptoms?: TrimesterSymptom[];
   created_at: string;
   updated_at: string;
+}
+
+export interface TrimesterSymptom {
+  id?: number;
+  name: string;
+  description: string;
+  image_url: string;
+  signed_image_url?: string;
+  trimester_number?: number;
+  trimester_name?: string;
 }
 
 export interface WeeklyContent {
@@ -42,27 +53,23 @@ export interface WeeklyContent {
   week: number;
   title: string;
   description: string;
-  baby_size?: string;
   baby_size_image_url?: string;
   signed_baby_size_image_url?: string;
   baby_size_description?: string;
-  baby_weight?: string;
   baby_weight_image_url?: string;
   signed_baby_weight_image_url?: string;
   baby_weight_description?: string;
-  baby_height?: string;
-  baby_height_image_url?: string;
-  signed_baby_height_image_url?: string;
-  baby_height_description?: string;
   ultrasound_image_url?: string;
   signed_ultrasound_image_url?: string;
   ultrasound_description?: string;
-  tips_and_advice?: string;
-  family_image_url?: string;
-  family_description?: string;
+  what_you_might_feel?: string;
+  what_you_might_feel_image_url?: string;
+  signed_what_you_might_feel_image_url?: string;
+  body_changes?: string;
+  body_changes_image_url?: string;
+  signed_body_changes_image_url?: string;
   trimester?: Trimester;
   trimester_name: string; // This field exists directly on the response
-  symptoms?: Symptom[];
   created_at: string;
   updated_at: string;
 }

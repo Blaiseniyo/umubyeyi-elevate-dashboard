@@ -19,8 +19,10 @@ import {
   Refresh,
   Search,
   Visibility,
-  MedicalServices,
-  LightbulbOutlined
+
+  ChildCare,
+  Psychology,
+  Badge
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import {
@@ -108,7 +110,6 @@ const TrimesterManagement: React.FC = () => {
     return `Weeks ${trimester.start_week}-${trimester.end_week}`;
   };
 
-  // No longer need truncateText as we're handling rich text directly
 
   if (loading) {
     return <LoadingSpinner message="Loading trimester content..." />;
@@ -263,55 +264,76 @@ const TrimesterManagement: React.FC = () => {
                     <Box sx={{ width: { xs: '100%', md: '58.333%' }, p: 1.5 }}>
                       <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                         <Box sx={{ display: 'flex', flexWrap: 'wrap', mx: -1 }}>
+
+
                           <Box sx={{ width: { xs: '100%', sm: '50%' }, p: 1 }}>
                             <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
-                              <MedicalServices color="primary" fontSize="small" />
+                              <ChildCare color="primary" fontSize="small" />
                               <Box>
                                 <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                                  Medical Checks
+                                  Baby Size
                                 </Typography>
                                 <Box
                                   sx={{
                                     overflow: 'hidden',
                                     textOverflow: 'ellipsis',
                                     display: '-webkit-box',
-                                    WebkitLineClamp: 3,
+                                    WebkitLineClamp: 2,
                                     WebkitBoxOrient: 'vertical',
                                     color: 'text.secondary',
                                     fontSize: '0.875rem',
                                     lineHeight: 1.43,
                                   }}
                                   dangerouslySetInnerHTML={{
-                                    __html: trimester.medical_checks || 'No medical checks specified.'
+                                    __html: trimester.baby_size || 'No baby size information.'
                                   }}
                                 />
                               </Box>
                             </Box>
                           </Box>
 
-                          <Box sx={{ width: { xs: '100%', sm: '50%' }, p: 1 }}>
+                          <Box sx={{ width: { xs: '100%', sm: '50%' }, p: 1, mt: 2 }}>
                             <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
-                              <LightbulbOutlined color="primary" fontSize="small" />
+                              <Badge color="primary" fontSize="small" />
                               <Box>
                                 <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                                  Tips and Advice
+                                  Fetal Development
                                 </Typography>
                                 <Box
                                   sx={{
                                     overflow: 'hidden',
                                     textOverflow: 'ellipsis',
                                     display: '-webkit-box',
-                                    WebkitLineClamp: 3,
+                                    WebkitLineClamp: 2,
                                     WebkitBoxOrient: 'vertical',
                                     color: 'text.secondary',
                                     fontSize: '0.875rem',
                                     lineHeight: 1.43,
                                   }}
                                   dangerouslySetInnerHTML={{
-                                    __html: trimester.tips_and_advice || 'No tips specified.'
+                                    __html: trimester.fetal_development || 'No fetal development information.'
                                   }}
                                 />
                               </Box>
+                            </Box>
+                          </Box>
+
+
+
+                          <Box sx={{ width: '100%', p: 1, mt: 2 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Psychology color="primary" fontSize="small" />
+                              <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                                Symptoms: {trimester.symptoms ? trimester.symptoms.length : 0}
+                              </Typography>
+                              {trimester.symptoms && trimester.symptoms.length > 0 && (
+                                <Chip
+                                  label={`${trimester.symptoms.length} symptom${trimester.symptoms.length > 1 ? 's' : ''}`}
+                                  size="small"
+                                  color="primary"
+                                  variant="outlined"
+                                />
+                              )}
                             </Box>
                           </Box>
                         </Box>

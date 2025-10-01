@@ -2,7 +2,6 @@ import React from 'react';
 import { Box, Stepper, Step, StepLabel, Divider } from '@mui/material';
 import BasicInfoStep from './BasicInfoStep';
 import BabyDevelopmentStep from './BabyDevelopmentStep';
-import SymptomsStep from './SymptomsStep';
 import ReviewStep from './ReviewStep';
 import { WeeklyContent } from '../../types';
 
@@ -19,13 +18,7 @@ interface ValidationErrors {
     baby_height_description?: string;
     ultrasound_image_url?: string;
     ultrasound_description?: string;
-    // Symptoms validation fields
-    symptoms?: {
-        [index: number]: {
-            name?: string;
-            image_url?: string;
-        }
-    }
+    // No more symptoms validation fields
 }
 
 interface WeeklyContentFormProps {
@@ -43,7 +36,7 @@ const WeeklyContentForm: React.FC<WeeklyContentFormProps> = ({
     activeStep,
     validationErrors = {}
 }) => {
-    const steps = ['Basic Information', 'Baby Development', 'Pregnancy Symptoms', 'Review & Submit'];
+    const steps = ['Basic Information', 'Baby Development', 'Review & Submit'];
     const isViewMode = mode === 'view';
     const isEditMode = mode === 'edit';
 
@@ -74,15 +67,6 @@ const WeeklyContentForm: React.FC<WeeklyContentFormProps> = ({
                     />
                 );
             case 2:
-                return (
-                    <SymptomsStep
-                        content={content}
-                        onContentUpdate={onContentUpdate}
-                        isViewMode={isViewMode}
-                        validationErrors={validationErrors.symptoms}
-                    />
-                );
-            case 3:
                 return (
                     <ReviewStep
                         content={content}
@@ -124,11 +108,6 @@ const WeeklyContentForm: React.FC<WeeklyContentFormProps> = ({
                             isViewMode={isViewMode}
                         />
                         <Divider sx={{ my: 4 }} />
-                        <SymptomsStep
-                            content={content}
-                            onContentUpdate={onContentUpdate}
-                            isViewMode={isViewMode}
-                        />
                     </Box>
                 ) : (
                     renderStepContent(activeStep)

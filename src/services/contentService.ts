@@ -3,74 +3,67 @@ import { ApiResponseWrapper, Trimester, WeeklyContent, Symptom } from '../types'
 
 export interface CreateTrimesterRequest {
   trimester: 1 | 2 | 3;
-  trimester_name: string;
+  trimester_name?: string;
   title: string;
   description?: string;
   start_week: number;
   end_week: number;
-  medical_checks?: string;
-  tips_and_advice?: string;
-}
-
-export interface UpdateTrimesterRequest {
-  trimester_name?: string;
-  title?: string;
-  description?: string;
-  start_week?: number;
-  end_week?: number;
-  medical_checks?: string;
-  tips_and_advice?: string;
-}
-
-export interface CreateWeeklyContentRequest {
-  week: number;
-  title: string;
-  description: string;
-  baby_size: string;
-  baby_size_image_url: string;
-  baby_size_description: string;
-  baby_weight: string;
-  baby_weight_image_url: string;
-  baby_weight_description: string;
-  baby_length: string;
-  baby_height_image_url: string;
-  baby_height_description: string;
-  ultrasound_image_url: string;
-  ultrasound_description: string;
-  family_image_url?: string;
-  family_description?: string;
-  tips_and_advice: string;
-  symptoms: Array<{
+  fetal_development?: string;
+  baby_size?: string;
+  symptoms?: Array<{
     name: string;
     description: string;
     image_url: string;
   }>;
 }
 
-export interface UpdateWeeklyContentRequest {
-  week?: number;
+export interface UpdateTrimesterRequest {
+  trimester?: 1 | 2 | 3;
+  trimester_name?: string;
   title?: string;
   description?: string;
+  start_week?: number;
+  end_week?: number;
+  fetal_development?: string;
   baby_size?: string;
-  baby_size_image_url?: string;
-  baby_size_description?: string;
-  baby_weight?: string;
-  baby_weight_image_url?: string;
-  baby_weight_description?: string;
-  baby_length?: string;
-  baby_height_image_url?: string;
-  baby_height_description?: string;
-  ultrasound_image_url?: string;
-  ultrasound_description?: string;
-  family_image_url?: string;
-  family_description?: string;
-  tips_and_advice?: string;
   symptoms?: Array<{
     id?: number;
     name: string;
     description: string;
     image_url: string;
   }>;
+}
+
+export interface CreateWeeklyContentRequest {
+  week: number;
+  title: string;
+  description: string;
+  baby_size_image_url: string;
+  baby_size_description: string;
+  baby_weight_image_url: string;
+  baby_weight_description: string;
+  ultrasound_image_url: string;
+  ultrasound_description: string;
+  what_you_might_feel: string;
+  what_you_might_feel_image_url: string;
+  body_changes: string;
+  body_changes_image_url: string;
+}
+
+export interface UpdateWeeklyContentRequest {
+  week?: number;
+  title?: string;
+  description?: string;
+  baby_size_image_url?: string;
+  baby_size_description?: string;
+  baby_weight_image_url?: string;
+  baby_weight_description?: string;
+  ultrasound_image_url?: string;
+  ultrasound_description?: string;
+  what_you_might_feel?: string;
+  what_you_might_feel_image_url?: string;
+  body_changes?: string;
+  body_changes_image_url?: string;
 }
 
 export interface GetContentParams {
@@ -141,8 +134,8 @@ class ContentService {
 
   // Symptom methods
   async getSymptoms(weekNumber?: number): Promise<ApiResponseWrapper<Symptom[]>> {
-    const url = weekNumber 
-      ? `/pregnancy-tracker/staff/symptoms/?week=${weekNumber}` 
+    const url = weekNumber
+      ? `/pregnancy-tracker/staff/symptoms/?week=${weekNumber}`
       : '/pregnancy-tracker/staff/symptoms/';
     return apiService.get<ApiResponseWrapper<Symptom[]>>(url);
   }
