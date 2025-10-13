@@ -3,34 +3,21 @@ import {
     Container,
     Typography,
     Box,
-    Paper,
     Button,
-    Divider,
-    Accordion,
-    AccordionSummary,
-    AccordionDetails,
-    IconButton,
     Breadcrumbs,
     Link as MuiLink,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogContentText,
-    DialogTitle
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import RichTextEditor from '../../components/Common/richTextEditor/RichTextEditor';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useToast } from '../../hooks';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { fetchSubtopicById } from '../../store/slices/healthHubSlice';
 import LoadingSpinner from '../../components/Common/LoadingSpinner';
 import { Section, Subsection } from '../../types/healthHub';
-import SectionDialog from '../../pages/HealthHub/SectionDialog';
+import SectionDialog from './SectionDialog';
+import TabsSection from './components/TabsSection';
+import DescriptionSection from './components/DescriptionSection';
+import DescriptionDialog from './components/DescriptionDialog';
 
 const SubtopicDetailPage: React.FC = () => {
     const { subtopicId } = useParams<{ subtopicId: string }>();
@@ -41,8 +28,6 @@ const SubtopicDetailPage: React.FC = () => {
     const [openDescriptionDialog, setOpenDescriptionDialog] = useState<boolean>(false);
     const [descriptionContent, setDescriptionContent] = useState<string>('');
     const [selectedSection, setSelectedSection] = useState<Section | null>(null);
-    // We no longer need these state variables as we're using a dedicated page instead of a dialog
-    // Removing them entirely could break existing code, so we'll keep them but not use them
     const { showToast } = useToast();
 
     useEffect(() => {
@@ -50,6 +35,12 @@ const SubtopicDetailPage: React.FC = () => {
             dispatch(fetchSubtopicById(Number(subtopicId)));
         }
     }, [dispatch, subtopicId]);
+
+    useEffect(() => {
+        if (currentSubtopic?.description) {
+            setDescriptionContent(currentSubtopic.description);
+        }
+    }, [currentSubtopic]);
 
     useEffect(() => {
         if (error) {
@@ -76,13 +67,6 @@ const SubtopicDetailPage: React.FC = () => {
         }
     };
 
-    // Keep these for backward compatibility or if needed later
-    const handleOpenSubsectionDialog = (section: Section, subsection?: Subsection) => {
-        handleNavigateToSubsectionForm(section, subsection);
-    };
-
-    // This method was used for the dialog approach but is no longer needed
-
     const handleOpenDescriptionDialog = () => {
         if (currentSubtopic) {
             setDescriptionContent(currentSubtopic.description);
@@ -95,18 +79,16 @@ const SubtopicDetailPage: React.FC = () => {
     };
 
     const handleSaveDescription = async () => {
-        if (!currentSubtopic) return;
-
         try {
             const healthHubService = await import('../../services/healthHubService').then(mod => mod.healthHubService);
-            const response = await healthHubService.updateSubtopic(currentSubtopic.id, {
+            const response = await healthHubService.updateSubtopic(Number(subtopicId), {
                 description: descriptionContent
             });
 
             if (response.success) {
                 showToast('Description updated successfully', 'success');
-                handleCloseDescriptionDialog();
                 dispatch(fetchSubtopicById(Number(subtopicId)));
+                handleCloseDescriptionDialog();
             } else {
                 showToast('Failed to update description', 'error');
             }
@@ -116,21 +98,17 @@ const SubtopicDetailPage: React.FC = () => {
         }
     };
 
-    const handleSaveSection = async (sectionData: { name: string; order: number }) => {
+    const handleSaveSection = async (formData: any) => {
         try {
-            // Use the healthHubService directly since we haven't implemented
-            // section actions in the Redux slice yet
             const healthHubService = await import('../../services/healthHubService').then(mod => mod.healthHubService);
-            let response;
+            const payload = {
+                ...formData,
+                subtopic_id: Number(subtopicId)
+            };
 
-            if (selectedSection) {
-                response = await healthHubService.updateSection(selectedSection.id, sectionData);
-            } else {
-                response = await healthHubService.createSection({
-                    ...sectionData,
-                    subtopic_id: Number(subtopicId)
-                });
-            }
+            const response = selectedSection
+                ? await healthHubService.updateSection(selectedSection.id, payload)
+                : await healthHubService.createSection(payload);
 
             if (response.success) {
                 showToast(`Section ${selectedSection ? 'updated' : 'created'} successfully`, 'success');
@@ -144,8 +122,6 @@ const SubtopicDetailPage: React.FC = () => {
             showToast(`Error ${selectedSection ? 'updating' : 'creating'} section`, 'error');
         }
     };
-
-    // Subsection saving is now handled in the SubsectionFormPage component
 
     const handleDeleteSection = async (id: number) => {
         if (window.confirm('Are you sure you want to delete this section? This will also delete all subsections within.')) {
@@ -191,9 +167,9 @@ const SubtopicDetailPage: React.FC = () => {
 
     if (loading) {
         return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
+            <Container sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
                 <LoadingSpinner />
-            </Box>
+            </Container>
         );
     }
 
@@ -246,208 +222,21 @@ const SubtopicDetailPage: React.FC = () => {
                     </Button>
                 </Box>
 
-                {/* Description display */}
-                <Paper sx={{ p: 3, mb: 4 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Typography variant="h6" gutterBottom>
-                            Description
-                        </Typography>
-                        <Button
-                            size="small"
-                            startIcon={<EditIcon />}
-                            onClick={handleOpenDescriptionDialog}
-                        >
-                            Edit
-                        </Button>
-                    </Box>
-                    <Box sx={{ mt: 2 }} dangerouslySetInnerHTML={{ __html: currentSubtopic.description }} />
-                </Paper>
+                {/* Description Section */}
+                <DescriptionSection 
+                    description={currentSubtopic.description} 
+                    onOpenDescriptionDialog={handleOpenDescriptionDialog} 
+                />
 
-                {/* Sections and Subsections */}
-                <Paper sx={{ p: 3 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                        <Typography variant="h5">Course Content</Typography>
-                        <Button
-                            variant="contained"
-                            startIcon={<AddIcon />}
-                            onClick={() => handleOpenSectionDialog()}
-                        >
-                            Add New Section
-                        </Button>
-                    </Box>
-
-                    <Divider sx={{ mb: 3 }} />
-
-                    {(!currentSubtopic.sections || currentSubtopic.sections.length === 0) ? (
-                        <Box sx={{ textAlign: 'center', py: 4 }}>
-                            <Typography variant="h6">No sections found</Typography>
-                            <Typography variant="body2" color="text.secondary" paragraph>
-                                Get started by creating a new section
-                            </Typography>
-                            <Button
-                                variant="contained"
-                                sx={{ mt: 2 }}
-                                startIcon={<AddIcon />}
-                                onClick={() => handleOpenSectionDialog()}
-                            >
-                                Add New Section
-                            </Button>
-                        </Box>
-                    ) : (
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                            {[...currentSubtopic.sections]
-                                .sort((a, b) => a.order - b.order)
-                                .map((section) => (
-                                    <Accordion key={section.id}>
-                                        <AccordionSummary
-                                            expandIcon={<ExpandMoreIcon />}
-                                            sx={{
-                                                '&.MuiAccordionSummary-root': {
-                                                    '&:hover .section-actions': { opacity: 1 }
-                                                }
-                                            }}
-                                        >
-                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-                                                <Box>
-                                                    <Typography variant="subtitle1">
-                                                        Section {section.order}: {section.name}
-                                                    </Typography>
-                                                    <Typography variant="caption" color="text.secondary">
-                                                        {section.subsections.length} subsections
-                                                    </Typography>
-                                                </Box>
-                                                <Box
-                                                    className="section-actions"
-                                                    sx={{
-                                                        display: 'flex',
-                                                        opacity: 0,
-                                                        transition: 'opacity 0.3s'
-                                                    }}
-                                                    onClick={(e) => e.stopPropagation()}
-                                                >
-                                                    {/* Changed from IconButton to Box to avoid button nesting */}
-                                                    <Box
-                                                        sx={{
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            justifyContent: 'center',
-                                                            color: 'primary.main',
-                                                            cursor: 'pointer',
-                                                            p: 0.5,
-                                                            borderRadius: 1,
-                                                            '&:hover': { bgcolor: 'action.hover' }
-                                                        }}
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleOpenSectionDialog(section);
-                                                        }}
-                                                    >
-                                                        <EditIcon fontSize="small" />
-                                                    </Box>
-                                                    <Box
-                                                        sx={{
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            justifyContent: 'center',
-                                                            color: 'error.main',
-                                                            cursor: 'pointer',
-                                                            p: 0.5,
-                                                            borderRadius: 1,
-                                                            '&:hover': { bgcolor: 'action.hover' }
-                                                        }}
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleDeleteSection(section.id);
-                                                        }}
-                                                    >
-                                                        <DeleteIcon fontSize="small" />
-                                                    </Box>
-                                                </Box>
-                                            </Box>
-                                        </AccordionSummary>
-                                        <AccordionDetails>
-                                            {section.subsections.length === 0 ? (
-                                                <Box sx={{ textAlign: 'center', py: 2 }}>
-                                                    <Typography variant="body2" color="text.secondary">
-                                                        No subsections found in this section
-                                                    </Typography>
-                                                    <Button
-                                                        variant="outlined"
-                                                        size="small"
-                                                        startIcon={<AddIcon />}
-                                                        sx={{ mt: 1 }}
-                                                        onClick={() => handleOpenSubsectionDialog(section)}
-                                                    >
-                                                        Add Subsection
-                                                    </Button>
-                                                </Box>
-                                            ) : (
-                                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                                    {[...section.subsections]
-                                                        .sort((a, b) => a.order - b.order)
-                                                        .map((subsection) => (
-                                                            <Paper
-                                                                key={subsection.id}
-                                                                variant="outlined"
-                                                                sx={{ p: 2 }}
-                                                            >
-                                                                <Box sx={{
-                                                                    display: 'flex',
-                                                                    justifyContent: 'space-between',
-                                                                    '&:hover .subsection-actions': { opacity: 1 }
-                                                                }}>
-                                                                    <Typography variant="subtitle2">
-                                                                        {subsection.order}. {subsection.name}
-                                                                    </Typography>
-                                                                    <Box
-                                                                        className="subsection-actions"
-                                                                        sx={{
-                                                                            display: 'flex',
-                                                                            opacity: 0,
-                                                                            transition: 'opacity 0.3s'
-                                                                        }}
-                                                                    >
-                                                                        <IconButton
-                                                                            size="small"
-                                                                            color="primary"
-                                                                            onClick={() => handleNavigateToSubsectionForm(section, subsection)}
-                                                                        >
-                                                                            <EditIcon fontSize="small" />
-                                                                        </IconButton>
-                                                                        <IconButton
-                                                                            size="small"
-                                                                            color="error"
-                                                                            onClick={() => handleDeleteSubsection(subsection.id)}
-                                                                        >
-                                                                            <DeleteIcon fontSize="small" />
-                                                                        </IconButton>
-                                                                    </Box>
-                                                                </Box>
-
-                                                                <Divider sx={{ my: 1 }} />
-
-                                                                <Box dangerouslySetInnerHTML={{ __html: subsection.content }} />
-                                                            </Paper>
-                                                        ))}
-
-                                                    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-                                                        <Button
-                                                            variant="outlined"
-                                                            size="small"
-                                                            startIcon={<AddIcon />}
-                                                            onClick={() => handleNavigateToSubsectionForm(section)}
-                                                        >
-                                                            Add Another Subsection
-                                                        </Button>
-                                                    </Box>
-                                                </Box>
-                                            )}
-                                        </AccordionDetails>
-                                    </Accordion>
-                                ))}
-                        </Box>
-                    )}
-                </Paper>
+                {/* Tabs Section */}
+                <TabsSection
+                    subtopicId={subtopicId || ''}
+                    sections={currentSubtopic.sections || []}
+                    onOpenSectionDialog={handleOpenSectionDialog}
+                    onDeleteSection={handleDeleteSection}
+                    onNavigateToSubsectionForm={handleNavigateToSubsectionForm}
+                    onDeleteSubsection={handleDeleteSubsection}
+                />
             </Box>
 
             <SectionDialog
@@ -457,38 +246,13 @@ const SubtopicDetailPage: React.FC = () => {
                 section={selectedSection}
             />
 
-            {/* Subsection dialog has been replaced by a dedicated page */}
-
-            {/* Description Edit Dialog */}
-            <Dialog
+            <DescriptionDialog
                 open={openDescriptionDialog}
+                content={descriptionContent}
                 onClose={handleCloseDescriptionDialog}
-                fullWidth
-                maxWidth="md"
-            >
-                <DialogTitle>Edit Course Description</DialogTitle>
-                <DialogContent>
-                    <DialogContentText sx={{ mb: 2 }}>
-                        Update the course description with rich text formatting.
-                    </DialogContentText>
-                    <Box sx={{ mt: 2 }}>
-                        <RichTextEditor
-                            value={descriptionContent}
-                            onChange={setDescriptionContent}
-                        />
-                    </Box>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCloseDescriptionDialog}>Cancel</Button>
-                    <Button
-                        onClick={handleSaveDescription}
-                        variant="contained"
-                        color="primary"
-                    >
-                        Save
-                    </Button>
-                </DialogActions>
-            </Dialog>
+                onSave={handleSaveDescription}
+                onChange={setDescriptionContent}
+            />
         </Container>
     );
 };

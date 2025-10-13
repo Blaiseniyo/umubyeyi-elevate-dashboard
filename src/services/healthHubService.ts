@@ -1,10 +1,12 @@
 import { apiService } from './api';
 import {
-    Topic, Subtopic, Section, Subsection,
+    Topic, Subtopic, Section, Subsection, Video, Podcast,
     CreateTopicRequest, UpdateTopicRequest,
     CreateSubtopicRequest, UpdateSubtopicRequest,
     CreateSectionRequest, UpdateSectionRequest,
     CreateSubsectionRequest, UpdateSubsectionRequest,
+    CreateVideoRequest, UpdateVideoRequest,
+    CreatePodcastRequest, UpdatePodcastRequest,
     HealthHubFilters, PaginatedResponse
 } from '../types/healthHub';
 import { ApiResponseWrapper } from '../types';
@@ -168,6 +170,58 @@ const mockSubsections: Subsection[] = [
     }
 ];
 
+// Mock video data
+const mockVideos: Video[] = [
+    {
+        id: 1,
+        title: 'Introduction to Preconception Health',
+        description: 'An overview of why preconception health matters and how to prepare for a healthy pregnancy.',
+        url: 'https://example.com/videos/preconception-intro.mp4',
+        thumbnail: 'https://example.com/thumbnails/preconception-intro.jpg',
+        duration: '15:30',
+        subtopic_id: 1,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+    },
+    {
+        id: 2,
+        title: 'Nutrition for Fertility',
+        description: 'Learn about the essential nutrients and dietary changes that can boost fertility.',
+        url: 'https://example.com/videos/fertility-nutrition.mp4',
+        thumbnail: 'https://example.com/thumbnails/fertility-nutrition.jpg',
+        duration: '18:45',
+        subtopic_id: 1,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+    }
+];
+
+// Mock podcast data
+const mockPodcasts: Podcast[] = [
+    {
+        id: 1,
+        title: 'Preconception Health: Expert Interview',
+        description: 'An interview with Dr. Sarah Johnson on preparing your body for pregnancy.',
+        url: 'https://example.com/podcasts/expert-interview.mp3',
+        thumbnail: 'https://example.com/thumbnails/podcast-expert.jpg',
+        duration: '42:15',
+        subtopic_id: 1,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+    },
+    {
+        id: 2,
+        title: 'Couples Journey to Conception',
+        description: 'Real stories from couples about their preconception journey.',
+        url: 'https://example.com/podcasts/couples-journey.mp3',
+        thumbnail: 'https://example.com/thumbnails/podcast-couples.jpg',
+        duration: '35:22',
+        subtopic_id: 1,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+    }
+];
+
 // Initialize mock data relationships
 (() => {
     // Assign subsections to sections
@@ -177,6 +231,10 @@ const mockSubsections: Subsection[] = [
 
     // Assign sections to subtopics - make a copy of the array, not a reference
     mockSubtopics[0].sections = [...mockSections];
+
+    // Assign videos and podcasts to subtopics
+    mockSubtopics[0].videos = mockVideos;
+    mockSubtopics[0].podcasts = mockPodcasts;
 
     // Assign subtopics to topics
     mockTopics[0].subtopics = [mockSubtopics[0], mockSubtopics[1]];
@@ -761,6 +819,306 @@ class HealthHubService {
         return {
             success: true,
             message: 'Subsection deleted successfully',
+            status_code: 200,
+            data: null
+        };
+    }
+
+    // Video methods
+    async getVideos(subtopicId: number): Promise<ApiResponseWrapper<Video[]>> {
+        const subtopic = mockSubtopics.find(s => s.id === subtopicId);
+
+        if (!subtopic) {
+            return {
+                success: false,
+                message: 'Subtopic not found',
+                status_code: 404,
+                data: [] as any
+            };
+        }
+
+        return {
+            success: true,
+            message: 'Videos retrieved successfully',
+            status_code: 200,
+            data: subtopic.videos || []
+        };
+    }
+
+    async getVideoById(id: number): Promise<ApiResponseWrapper<Video>> {
+        const video = mockVideos.find(v => v.id === id);
+
+        if (!video) {
+            return {
+                success: false,
+                message: 'Video not found',
+                status_code: 404,
+                data: null as any
+            };
+        }
+
+        return {
+            success: true,
+            message: 'Video retrieved successfully',
+            status_code: 200,
+            data: { ...video }
+        };
+    }
+
+    async createVideo(data: CreateVideoRequest): Promise<ApiResponseWrapper<Video>> {
+        // Find the subtopic
+        const subtopic = mockSubtopics.find(s => s.id === data.subtopic_id);
+
+        if (!subtopic) {
+            return {
+                success: false,
+                message: 'Subtopic not found',
+                status_code: 404,
+                data: null as any
+            };
+        }
+
+        // In a real implementation, we would handle file upload here
+        // For mock data, we'll just create a URL
+        const newVideo: Video = {
+            id: Math.max(...mockVideos.map(v => v.id), 0) + 1,
+            title: data.title,
+            description: data.description || '',
+            url: data.url || `https://example.com/videos/${data.title.toLowerCase().replace(/\s+/g, '-')}.mp4`,
+            thumbnail: data.thumbnail || `https://example.com/thumbnails/${data.title.toLowerCase().replace(/\s+/g, '-')}.jpg`,
+            duration: '0:00', // This would be determined from the actual file
+            subtopic_id: data.subtopic_id,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+        };
+
+        mockVideos.push(newVideo);
+
+        // Add to subtopic videos if it exists, otherwise create the array
+        if (!subtopic.videos) {
+            subtopic.videos = [];
+        }
+        subtopic.videos.push(newVideo);
+
+        return {
+            success: true,
+            message: 'Video created successfully',
+            status_code: 201,
+            data: { ...newVideo }
+        };
+    }
+
+    async updateVideo(id: number, data: UpdateVideoRequest): Promise<ApiResponseWrapper<Video>> {
+        const videoIndex = mockVideos.findIndex(v => v.id === id);
+
+        if (videoIndex === -1) {
+            return {
+                success: false,
+                message: 'Video not found',
+                status_code: 404,
+                data: null as any
+            };
+        }
+
+        const updatedVideo = {
+            ...mockVideos[videoIndex],
+            ...data,
+            updated_at: new Date().toISOString()
+        };
+
+        mockVideos[videoIndex] = updatedVideo;
+
+        // Also update in the subtopic
+        const subtopic = mockSubtopics.find(s => s.id === updatedVideo.subtopic_id);
+        if (subtopic && subtopic.videos) {
+            const subtopicVideoIndex = subtopic.videos.findIndex(v => v.id === id);
+            if (subtopicVideoIndex !== -1) {
+                subtopic.videos[subtopicVideoIndex] = updatedVideo;
+            }
+        }
+
+        return {
+            success: true,
+            message: 'Video updated successfully',
+            status_code: 200,
+            data: { ...updatedVideo }
+        };
+    }
+
+    async deleteVideo(id: number): Promise<ApiResponseWrapper<null>> {
+        const videoIndex = mockVideos.findIndex(v => v.id === id);
+
+        if (videoIndex === -1) {
+            return {
+                success: false,
+                message: 'Video not found',
+                status_code: 404,
+                data: null
+            };
+        }
+
+        const deletedVideo = mockVideos[videoIndex];
+        mockVideos.splice(videoIndex, 1);
+
+        // Also remove from the subtopic
+        const subtopic = mockSubtopics.find(s => s.id === deletedVideo.subtopic_id);
+        if (subtopic && subtopic.videos) {
+            subtopic.videos = subtopic.videos.filter(v => v.id !== id);
+        }
+
+        return {
+            success: true,
+            message: 'Video deleted successfully',
+            status_code: 200,
+            data: null
+        };
+    }
+
+    // Podcast methods
+    async getPodcasts(subtopicId: number): Promise<ApiResponseWrapper<Podcast[]>> {
+        const subtopic = mockSubtopics.find(s => s.id === subtopicId);
+
+        if (!subtopic) {
+            return {
+                success: false,
+                message: 'Subtopic not found',
+                status_code: 404,
+                data: [] as any
+            };
+        }
+
+        return {
+            success: true,
+            message: 'Podcasts retrieved successfully',
+            status_code: 200,
+            data: subtopic.podcasts || []
+        };
+    }
+
+    async getPodcastById(id: number): Promise<ApiResponseWrapper<Podcast>> {
+        const podcast = mockPodcasts.find(p => p.id === id);
+
+        if (!podcast) {
+            return {
+                success: false,
+                message: 'Podcast not found',
+                status_code: 404,
+                data: null as any
+            };
+        }
+
+        return {
+            success: true,
+            message: 'Podcast retrieved successfully',
+            status_code: 200,
+            data: { ...podcast }
+        };
+    }
+
+    async createPodcast(data: CreatePodcastRequest): Promise<ApiResponseWrapper<Podcast>> {
+        // Find the subtopic
+        const subtopic = mockSubtopics.find(s => s.id === data.subtopic_id);
+
+        if (!subtopic) {
+            return {
+                success: false,
+                message: 'Subtopic not found',
+                status_code: 404,
+                data: null as any
+            };
+        }
+
+        // In a real implementation, we would handle file upload here
+        // For mock data, we'll just create a URL
+        const newPodcast: Podcast = {
+            id: Math.max(...mockPodcasts.map(p => p.id), 0) + 1,
+            title: data.title,
+            description: data.description || '',
+            url: data.url || `https://example.com/podcasts/${data.title.toLowerCase().replace(/\s+/g, '-')}.mp3`,
+            thumbnail: data.thumbnail || `https://example.com/thumbnails/podcast-${data.title.toLowerCase().replace(/\s+/g, '-')}.jpg`,
+            duration: '0:00', // This would be determined from the actual file
+            subtopic_id: data.subtopic_id,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+        };
+
+        mockPodcasts.push(newPodcast);
+
+        // Add to subtopic podcasts if it exists, otherwise create the array
+        if (!subtopic.podcasts) {
+            subtopic.podcasts = [];
+        }
+        subtopic.podcasts.push(newPodcast);
+
+        return {
+            success: true,
+            message: 'Podcast created successfully',
+            status_code: 201,
+            data: { ...newPodcast }
+        };
+    }
+
+    async updatePodcast(id: number, data: UpdatePodcastRequest): Promise<ApiResponseWrapper<Podcast>> {
+        const podcastIndex = mockPodcasts.findIndex(p => p.id === id);
+
+        if (podcastIndex === -1) {
+            return {
+                success: false,
+                message: 'Podcast not found',
+                status_code: 404,
+                data: null as any
+            };
+        }
+
+        const updatedPodcast = {
+            ...mockPodcasts[podcastIndex],
+            ...data,
+            updated_at: new Date().toISOString()
+        };
+
+        mockPodcasts[podcastIndex] = updatedPodcast;
+
+        // Also update in the subtopic
+        const subtopic = mockSubtopics.find(s => s.id === updatedPodcast.subtopic_id);
+        if (subtopic && subtopic.podcasts) {
+            const subtopicPodcastIndex = subtopic.podcasts.findIndex(p => p.id === id);
+            if (subtopicPodcastIndex !== -1) {
+                subtopic.podcasts[subtopicPodcastIndex] = updatedPodcast;
+            }
+        }
+
+        return {
+            success: true,
+            message: 'Podcast updated successfully',
+            status_code: 200,
+            data: { ...updatedPodcast }
+        };
+    }
+
+    async deletePodcast(id: number): Promise<ApiResponseWrapper<null>> {
+        const podcastIndex = mockPodcasts.findIndex(p => p.id === id);
+
+        if (podcastIndex === -1) {
+            return {
+                success: false,
+                message: 'Podcast not found',
+                status_code: 404,
+                data: null
+            };
+        }
+
+        const deletedPodcast = mockPodcasts[podcastIndex];
+        mockPodcasts.splice(podcastIndex, 1);
+
+        // Also remove from the subtopic
+        const subtopic = mockSubtopics.find(s => s.id === deletedPodcast.subtopic_id);
+        if (subtopic && subtopic.podcasts) {
+            subtopic.podcasts = subtopic.podcasts.filter(p => p.id !== id);
+        }
+
+        return {
+            success: true,
+            message: 'Podcast deleted successfully',
             status_code: 200,
             data: null
         };

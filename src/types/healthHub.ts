@@ -19,6 +19,30 @@ export interface Section {
     updated_at: string;
 }
 
+export interface Video {
+    id: number;
+    title: string;
+    description?: string;
+    url: string;
+    thumbnail?: string;
+    duration?: string;
+    subtopic_id: number;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface Podcast {
+    id: number;
+    title: string;
+    description?: string;
+    url: string;
+    thumbnail?: string;
+    duration?: string;
+    subtopic_id: number;
+    created_at: string;
+    updated_at: string;
+}
+
 export interface Subtopic {
     id: number;
     name: string;
@@ -29,6 +53,8 @@ export interface Subtopic {
     topic_name?: string;
     duration: string; // e.g., "3h"
     sections: Section[];
+    videos?: Video[];
+    podcasts?: Podcast[];
     created_at: string;
     updated_at: string;
 }
@@ -91,6 +117,40 @@ export interface UpdateSubsectionRequest {
     name?: string;
     content?: string;
     order?: number;
+}
+
+export interface CreateVideoRequest {
+    title: string;
+    description?: string;
+    file?: File;
+    url?: string;
+    thumbnail?: string;
+    subtopic_id: number;
+}
+
+export interface UpdateVideoRequest {
+    title?: string;
+    description?: string;
+    file?: File;
+    url?: string;
+    thumbnail?: string;
+}
+
+export interface CreatePodcastRequest {
+    title: string;
+    description?: string;
+    file?: File;
+    url?: string;
+    thumbnail?: string;
+    subtopic_id: number;
+}
+
+export interface UpdatePodcastRequest {
+    title?: string;
+    description?: string;
+    file?: File;
+    url?: string;
+    thumbnail?: string;
 }
 
 // Filters and Params

@@ -29,6 +29,8 @@ import TopicDetailPage from './pages/HealthHub/TopicDetailPage';
 import SubtopicDetailPage from './pages/HealthHub/SubtopicDetailPage';
 import SubtopicFormPage from './pages/HealthHub/SubtopicFormPage';
 import SubsectionFormPage from './pages/HealthHub/SubsectionFormPage';
+import VideoFormPage from './pages/HealthHub/VideoFormPage';
+import PodcastFormPage from './pages/HealthHub/PodcastFormPage';
 
 const AppContent: React.FC = () => {
   return (
@@ -165,6 +167,40 @@ const AppContent: React.FC = () => {
             element={
               <ProtectedRoute requiredRole="staff">
                 <SubsectionFormPage />
+              </ProtectedRoute>
+            }
+          />
+          {/* Video Routes */}
+          <Route
+            path="health-hub/subtopics/:subtopicId/videos/create"
+            element={
+              <ProtectedRoute requiredRole="staff">
+                <VideoFormPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="health-hub/subtopics/:subtopicId/videos/:videoId/edit"
+            element={
+              <ProtectedRoute requiredRole="staff">
+                <VideoFormPage />
+              </ProtectedRoute>
+            }
+          />
+          {/* Podcast Routes */}
+          <Route
+            path="health-hub/subtopics/:subtopicId/podcasts/create"
+            element={
+              <ProtectedRoute requiredRole="staff">
+                <PodcastFormPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="health-hub/subtopics/:subtopicId/podcasts/:podcastId/edit"
+            element={
+              <ProtectedRoute requiredRole="staff">
+                <PodcastFormPage />
               </ProtectedRoute>
             }
           />
