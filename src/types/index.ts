@@ -109,3 +109,6 @@ export interface PaginatedResponse<T> {
   limit: number;
   totalPages: number;
 }
+
+// Export Health Hub types
+export * from './healthHub';

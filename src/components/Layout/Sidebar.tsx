@@ -18,6 +18,7 @@ import {
   Dashboard,
   People,
   PregnantWoman,
+  School,
   Settings,
   ExitToApp,
   ChevronLeft,
@@ -34,6 +35,7 @@ const menuItems = [
   { text: 'Dashboard', icon: <Dashboard />, path: '/dashboard' },
   { text: 'User Management', icon: <People />, path: '/users' },
   { text: 'Pregnancy Tracker', icon: <PregnantWoman />, path: '/pregnancy-tracker/content' },
+  { text: 'Health Hub', icon: <School />, path: '/health-hub' },
   { text: 'Settings', icon: <Settings />, path: '/settings' },
 ];
 

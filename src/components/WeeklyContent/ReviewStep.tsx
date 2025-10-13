@@ -155,8 +155,6 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ content }) => {
                         </Stack>
                     </CardContent>
                 </Card>
-                
-                {/* Removed Symptoms Preview */}
             </Stack>
         </Box>
     );

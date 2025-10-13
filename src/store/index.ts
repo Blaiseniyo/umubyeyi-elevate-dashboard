@@ -7,6 +7,7 @@ import authSlice from './slices/authSlice';
 import userSlice from './slices/userSlice';
 import contentSlice from './slices/contentSlice';
 import uiSlice from './slices/uiSlice';
+import healthHubSlice from './slices/healthHubSlice';
 
 const persistConfig = {
   key: 'root',
@@ -19,6 +20,7 @@ const rootReducer = combineReducers({
   users: userSlice,
   content: contentSlice,
   ui: uiSlice,
+  healthHub: healthHubSlice,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

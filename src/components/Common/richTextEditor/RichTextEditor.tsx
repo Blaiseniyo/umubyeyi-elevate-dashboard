@@ -180,7 +180,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
                         hide: !true,
                     },
                     sx: {
-                        paddingLeft: 2090,
+                        // Fix the paddingLeft which was set to an extremely large value
                         borderColor: error ? 'error.main' : 'divider',
                         borderRadius: 1,
                         backgroundColor: 'background.paper',

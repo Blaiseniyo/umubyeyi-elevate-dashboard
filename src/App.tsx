@@ -23,6 +23,13 @@ import WeeklyContentPage from './pages/Content/WeeklyContentPage';
 import TrimesterPage from './pages/Content/TrimesterPage';
 import Settings from './pages/Settings';
 
+// Health Hub Pages
+import HealthHubManagement from './pages/HealthHub/HealthHubManagement';
+import TopicDetailPage from './pages/HealthHub/TopicDetailPage';
+import SubtopicDetailPage from './pages/HealthHub/SubtopicDetailPage';
+import SubtopicFormPage from './pages/HealthHub/SubtopicFormPage';
+import SubsectionFormPage from './pages/HealthHub/SubsectionFormPage';
+
 const AppContent: React.FC = () => {
   return (
     <Router>
@@ -103,6 +110,64 @@ const AppContent: React.FC = () => {
             }
           />
           <Route path="settings" element={<Settings />} />
+
+          {/* Health Hub Routes */}
+          <Route
+            path="health-hub"
+            element={
+              <ProtectedRoute requiredRole="staff">
+                <HealthHubManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="health-hub/topics/:topicId"
+            element={
+              <ProtectedRoute requiredRole="staff">
+                <TopicDetailPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="health-hub/subtopics/:subtopicId"
+            element={
+              <ProtectedRoute requiredRole="staff">
+                <SubtopicDetailPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="health-hub/topics/:topicId/subtopics/create"
+            element={
+              <ProtectedRoute requiredRole="staff">
+                <SubtopicFormPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="health-hub/topics/:topicId/subtopics/:subtopicId/edit"
+            element={
+              <ProtectedRoute requiredRole="staff">
+                <SubtopicFormPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="health-hub/subtopics/:subtopicId/sections/:sectionId/subsections/create"
+            element={
+              <ProtectedRoute requiredRole="staff">
+                <SubsectionFormPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="health-hub/subtopics/:subtopicId/sections/:sectionId/subsections/:subsectionId/edit"
+            element={
+              <ProtectedRoute requiredRole="staff">
+                <SubsectionFormPage />
+              </ProtectedRoute>
+            }
+          />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
