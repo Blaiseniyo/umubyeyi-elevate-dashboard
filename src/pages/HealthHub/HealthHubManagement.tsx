@@ -27,6 +27,7 @@ import { useAppDispatch, useAppSelector } from '../../hooks';
 import { fetchTopics, createTopic, updateTopic, deleteTopic } from '../../store/slices/healthHubSlice';
 import LoadingSpinner from '../../components/Common/LoadingSpinner';
 import TopicDialog from '../../pages/HealthHub/TopicDialog';
+import ConfirmDialog from '../../components/Common/ConfirmDialog';
 
 const HealthHubManagement: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -36,6 +37,10 @@ const HealthHubManagement: React.FC = () => {
     const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
     const { showToast } = useToast();
     const navigate = useNavigate();
+
+    // Confirmation dialog state
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
+    const [topicToDelete, setTopicToDelete] = useState<{ id: number, name: string } | null>(null);
 
     // Load topics directly with useEffect below
 
@@ -59,7 +64,7 @@ const HealthHubManagement: React.FC = () => {
         setSelectedTopic(null);
     };
 
-    const handleSaveTopic = async (topicData: { name: string; description: string }) => {
+    const handleSaveTopic = async (topicData: { name: string }) => {
         try {
             if (selectedTopic) {
                 await dispatch(updateTopic({
@@ -78,16 +83,47 @@ const HealthHubManagement: React.FC = () => {
         }
     };
 
-    const handleDeleteTopic = async (id: number) => {
-        if (window.confirm('Are you sure you want to delete this topic? This will also delete all subtopics and content within.')) {
-            try {
-                await dispatch(deleteTopic(id));
-                showToast('Topic deleted successfully', 'success');
-            } catch (error) {
-                console.error('Error deleting topic:', error);
-                showToast('Error deleting topic', 'error');
+    const openDeleteConfirmation = (id: number, name: string) => {
+        setTopicToDelete({ id, name });
+        setDeleteDialogOpen(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!topicToDelete) return;
+
+        try {
+            await dispatch(deleteTopic(topicToDelete.id));
+            showToast('Topic deleted successfully', 'success');
+
+            // Reload the topics list with fresh data after deletion
+            await dispatch(fetchTopics({
+                search: search.trim() !== '' ? search : undefined
+            }));
+
+            // Force a refresh of the UI by updating the search term slightly and then reverting
+            if (search.trim() === '') {
+                setSearch(' ');
+                setTimeout(() => setSearch(''), 10);
+            } else {
+                setSearch(prev => prev + ' ');
+                setTimeout(() => setSearch(prev => prev.trim()), 10);
             }
+        } catch (error) {
+            console.error('Error deleting topic:', error);
+            showToast('Error deleting topic', 'error');
+        } finally {
+            setDeleteDialogOpen(false);
+            setTopicToDelete(null);
         }
+    };
+
+    const handleCancelDelete = () => {
+        setDeleteDialogOpen(false);
+        setTopicToDelete(null);
+    };
+
+    const handleDeleteTopic = (id: number, name: string) => {
+        openDeleteConfirmation(id, name);
     };
 
     const navigateToTopic = (id: number) => {
@@ -194,16 +230,24 @@ const HealthHubManagement: React.FC = () => {
                                             variant="body2"
                                             color="text.secondary"
                                             sx={{
-                                                mb: 2,
+                                                mb: 1,
                                                 overflow: 'hidden',
                                                 textOverflow: 'ellipsis',
                                                 display: '-webkit-box',
-                                                WebkitLineClamp: 3,
+                                                WebkitLineClamp: 2,
                                                 WebkitBoxOrient: 'vertical',
-                                                minHeight: '4.5em'
+                                                minHeight: '3em'
                                             }}
                                         >
-                                            {topic.description || 'No description provided'}
+                                            Created by {topic.created_by || 'Anonymous'}
+                                        </Typography>
+
+                                        <Typography
+                                            variant="caption"
+                                            color="text.secondary"
+                                            sx={{ display: 'block', mb: 2 }}
+                                        >
+                                            Created: {new Date(topic.created_at).toLocaleDateString()}
                                         </Typography>
 
                                         <Box sx={{
@@ -216,7 +260,7 @@ const HealthHubManagement: React.FC = () => {
                                         }}>
                                             <FolderIcon color="primary" fontSize="small" sx={{ mr: 1 }} />
                                             <Typography variant="body2" fontWeight="medium">
-                                                {topic.subtopics?.length || 0} {topic.subtopics?.length === 1 ? 'Subtopic' : 'Subtopics'}
+                                                {topic.sub_topics?.length || topic.subtopics?.length || 0} {(topic.sub_topics?.length || topic.subtopics?.length || 0) === 1 ? 'Subtopic' : 'Subtopics'}
                                             </Typography>
                                         </Box>
                                     </CardContent>
@@ -247,7 +291,7 @@ const HealthHubManagement: React.FC = () => {
                                             color="error"
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                handleDeleteTopic(topic.id);
+                                                handleDeleteTopic(topic.id, topic.name);
                                             }}
                                         >
                                             <DeleteIcon fontSize="small" />
@@ -265,6 +309,18 @@ const HealthHubManagement: React.FC = () => {
                 onClose={handleCloseDialog}
                 onSave={handleSaveTopic}
                 topic={selectedTopic}
+            />
+
+            {/* Confirmation Dialog for Delete Actions */}
+            <ConfirmDialog
+                open={deleteDialogOpen}
+                title="Delete Topic"
+                message={topicToDelete ? `Are you sure you want to delete "${topicToDelete.name}"? This will also delete all subtopics and content within.` : "Are you sure you want to delete this topic?"}
+                onConfirm={handleConfirmDelete}
+                onCancel={handleCancelDelete}
+                confirmText="Delete"
+                cancelText="Cancel"
+                severity="error"
             />
         </Container>
     );

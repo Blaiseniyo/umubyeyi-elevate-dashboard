@@ -24,15 +24,20 @@ const SubtopicFormPage: React.FC = () => {
     const { topicId, subtopicId } = useParams<{ topicId: string; subtopicId: string }>();
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
-    const { currentTopic, currentSubtopic, loading } = useAppSelector(state => state.healthHub);
+    const { currentTopic, loading } = useAppSelector(state => state.healthHub);
+
     const { showToast } = useToast();
 
+    // Add a counter to track subtopic changes for key generation
+    const [subtopicChangeCounter, setSubtopicChangeCounter] = useState(0);
+
     // Form state
-    const [name, setName] = useState('');
-    const [thumbnail, setThumbnail] = useState('');
-    const [description, setDescription] = useState('');
-    const [duration, setDuration] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [formData, setFormData] = useState({
+        name: '',
+        thumbnail: '',
+        description: '',
+        duration: ''
+    });
 
     // Error state
     const [errors, setErrors] = useState({
@@ -42,33 +47,119 @@ const SubtopicFormPage: React.FC = () => {
         duration: ''
     });
 
-    // Fetch topic data if needed
-    useEffect(() => {
-        if (topicId) {
-            dispatch(fetchTopicById(Number(topicId)));
-        }
-    }, [dispatch, topicId]);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // If editing existing subtopic, load its data
+    // Effect to increment subtopic counter when subtopicId changes
     useEffect(() => {
-        if (subtopicId && currentSubtopic) {
-            setName(currentSubtopic.name || '');
-            setThumbnail(currentSubtopic.thumbnail || '');
-            setDescription(currentSubtopic.description || '');
-            setDuration(currentSubtopic.duration || '');
-        } else {
-            // Reset form for new subtopic
-            setName('');
-            setThumbnail('');
-            setDescription('');
-            setDuration('');
-        }
-    }, [subtopicId, currentSubtopic]);
+        // Increment the counter to force rich text editor to re-render
+        console.log('SubtopicId changed, incrementing counter');
+        setSubtopicChangeCounter(prev => prev + 1);
 
-    // Handle image upload/remove
+        // Don't clear form data here - let the data fetching handle that
+        // This prevents the form from being cleared before new data is fetched
+    }, [subtopicId]);
+
+    // Separate useEffect for data fetching
+    useEffect(() => {
+        // Track if the component is still mounted
+        let isMounted = true;
+
+        // Clear form data at the beginning of data fetching
+        // This ensures we don't show stale data while loading
+        setFormData({
+            name: '',
+            thumbnail: '',
+            description: '',
+            duration: ''
+        });
+
+        const fetchData = async () => {
+            try {
+                // Always fetch the topic for breadcrumb navigation
+                if (topicId) {
+                    await dispatch(fetchTopicById(Number(topicId)));
+                }
+
+                // If editing, fetch the subtopic directly from the API
+                if (subtopicId && isMounted) {
+                    console.log(`Fetching data for subtopic ${subtopicId}...`);
+                    const healthHubService = await import('../../services/healthHubService').then(mod => mod.healthHubService);
+                    const response = await healthHubService.getSubtopicById(Number(subtopicId));
+
+                    // Only update state if component is still mounted
+                    if (response.success && response.data && isMounted) {
+                        const subtopicData = response.data;
+
+                        // Extract content properly and validate
+                        const contentValue = subtopicData.content || '';
+
+                        if (isMounted) {
+                            // Explicitly set form data with the API response
+                            const newFormData = {
+                                name: subtopicData.name || '',
+                                thumbnail: subtopicData.cover_image_url || '',
+                                description: contentValue,
+                                duration: subtopicData.course_duration_minutes
+                                    ? subtopicData.course_duration_minutes.toString()
+                                    : '',
+                            };
+
+                            // First update with a small delay to ensure the component has time to remount
+                            setTimeout(() => {
+                                if (isMounted) {
+                                    setFormData(newFormData);
+
+                                    // Verify the form data was set correctly
+                                    console.log('Form data set to:', {
+                                        name: subtopicData.name,
+                                        description: contentValue,
+                                        duration: subtopicData.course_duration_minutes,
+                                        thumbnail: subtopicData.cover_image_url
+                                    });
+
+                                    // Force a re-render of the rich text editor
+                                    setSubtopicChangeCounter(prev => prev + 1);
+                                }
+                            }, 50);
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error('Error fetching data:', err);
+                if (isMounted) {
+                    showToast('Failed to load data. Please try again.', 'error');
+                }
+            }
+        };
+
+        fetchData();
+
+        // Cleanup function to prevent updates on unmounted component
+        return () => {
+            isMounted = false;
+        };
+    }, [dispatch, topicId, subtopicId, showToast]);
+
+    // Handle form field changes
+    const handleChange = (field: string, value: string) => {
+
+        setFormData(prev => {
+            const newData = {
+                ...prev,
+                [field]: value
+            };
+            return newData;
+        });
+
+        setErrors(prev => ({
+            ...prev,
+            [field]: ''
+        }));
+    };
+
+    // Handle image upload
     const handleImageUpload = (url: string) => {
-        setThumbnail(url);
-        setErrors({ ...errors, thumbnail: '' });
+        handleChange('thumbnail', url);
     };
 
     const validateForm = (): boolean => {
@@ -80,22 +171,22 @@ const SubtopicFormPage: React.FC = () => {
             duration: ''
         };
 
-        if (!name.trim()) {
+        if (!formData.name.trim()) {
             newErrors.name = 'Name is required';
             isValid = false;
         }
 
-        if (!thumbnail) {
+        if (!formData.thumbnail) {
             newErrors.thumbnail = 'Thumbnail image is required';
             isValid = false;
         }
 
-        if (!description.trim()) {
+        if (!formData.description.trim()) {
             newErrors.description = 'Description is required';
             isValid = false;
         }
 
-        if (!duration.trim()) {
+        if (!formData.duration.trim()) {
             newErrors.duration = 'Duration is required';
             isValid = false;
         }
@@ -111,29 +202,37 @@ const SubtopicFormPage: React.FC = () => {
 
         try {
             const healthHubService = await import('../../services/healthHubService').then(mod => mod.healthHubService);
-            let response;
+
+            // Ensure numeric duration is valid
+            const durationValue = parseInt(formData.duration, 10);
+            if (isNaN(durationValue) || durationValue <= 0) {
+                setErrors(prev => ({ ...prev, duration: 'Please enter a valid duration' }));
+                return;
+            }
 
             const subtopicData = {
-                name,
-                thumbnail,
-                description,
-                duration,
-                topic_id: Number(topicId)
+                name: formData.name.trim(),
+                cover_image_url: formData.thumbnail,
+                content: formData.description.trim(),
+                course_duration_minutes: durationValue
             };
 
+            console.log('Submitting subtopic data:', subtopicData);
+
+            let response;
             if (subtopicId) {
                 // Update existing subtopic
                 response = await healthHubService.updateSubtopic(Number(subtopicId), subtopicData);
             } else {
                 // Create new subtopic
-                response = await healthHubService.createSubtopic(subtopicData);
+                response = await healthHubService.createSubtopic(Number(topicId), subtopicData);
             }
 
             if (response.success) {
                 showToast(`Subtopic ${subtopicId ? 'updated' : 'created'} successfully`, 'success');
                 navigate(`/health-hub/topics/${topicId}`);
             } else {
-                showToast(`Failed to ${subtopicId ? 'update' : 'create'} subtopic`, 'error');
+                showToast(`Failed to ${subtopicId ? 'update' : 'create'} subtopic: ${response.message || 'Unknown error'}`, 'error');
             }
         } catch (error) {
             console.error(`Error ${subtopicId ? 'updating' : 'creating'} subtopic:`, error);
@@ -143,7 +242,8 @@ const SubtopicFormPage: React.FC = () => {
         }
     };
 
-    if (loading) {
+    // Only show loading spinner when initially loading data, not during submission
+    if (loading && !isSubmitting) {
         return <LoadingSpinner />;
     }
 
@@ -191,11 +291,8 @@ const SubtopicFormPage: React.FC = () => {
                             </Typography>
                             <TextField
                                 fullWidth
-                                value={name}
-                                onChange={(e) => {
-                                    setName(e.target.value);
-                                    setErrors({ ...errors, name: '' });
-                                }}
+                                value={formData.name}
+                                onChange={(e) => handleChange('name', e.target.value)}
                                 error={Boolean(errors.name)}
                                 helperText={errors.name}
                                 required
@@ -204,37 +301,40 @@ const SubtopicFormPage: React.FC = () => {
 
                         <Box>
                             <Typography variant="subtitle1" gutterBottom>
-                                Duration<span style={{ color: 'red' }}>*</span>
+                                Duration (minutes)<span style={{ color: 'red' }}>*</span>
                             </Typography>
                             <TextField
                                 fullWidth
-                                value={duration}
+                                value={formData.duration}
                                 onChange={(e) => {
-                                    setDuration(e.target.value);
-                                    setErrors({ ...errors, duration: '' });
+                                    // Only allow numeric input
+                                    const value = e.target.value;
+                                    if (value === '' || /^[0-9]+$/.test(value)) {
+                                        handleChange('duration', value);
+                                    }
                                 }}
                                 error={Boolean(errors.duration)}
-                                helperText={errors.duration || "e.g. '30min', '2h'"}
+                                helperText={errors.duration || "Enter duration in minutes (e.g. 30 for 30 minutes)"}
                                 required
-                                placeholder="15min"
+                                placeholder="30"
+                                type="number"
+                                inputProps={{ min: 1 }}
                             />
                         </Box>
 
                         <Box>
-                            <Typography variant="subtitle1" gutterBottom>
-                                Thumbnail Image<span style={{ color: 'red' }}>*</span>
-                            </Typography>
                             <Box sx={{ mb: 2 }}>
+                                {/* Using key to force component re-render when thumbnail changes */}
                                 <ImageUpload
-                                    label="" /* Using Typography label instead */
-                                    value={thumbnail}
-                                    displayUrl={thumbnail}
+                                    key={formData.thumbnail || 'empty-image'}
+                                    label="Cover Image"
+                                    value={formData.thumbnail}
+                                    displayUrl={formData.thumbnail}
                                     onChange={(url, _signedUrl) => {
-                                        // Using underscore prefix to indicate intentionally unused parameter
                                         handleImageUpload(url || '');
                                     }}
-                                    filePath="health_hub/thumbnails"
-                                    fileName={`subtopic_${subtopicId ? subtopicId : Date.now()}`}
+                                    filePath="HealthHub/sub-topics"
+                                    fileName={`${formData.name.replace(/\s+/g, '-') || `subtopic_${Date.now()}`}`}
                                     required={true}
                                     error={Boolean(errors.thumbnail)}
                                 />
@@ -249,15 +349,32 @@ const SubtopicFormPage: React.FC = () => {
                                 Description<span style={{ color: 'red' }}>*</span>
                             </Typography>
                             <Box>
-                                <RichTextEditor
-                                    label="" /* Remove duplicate label */
-                                    value={description}
-                                    onChange={(content) => {
-                                        setDescription(content);
-                                        setErrors({ ...errors, description: '' });
-                                    }}
-                                    error={Boolean(errors.description)}
-                                />
+                                {/* Use conditional rendering to ensure the editor is created after we have content */}
+
+                                {/* Use separate key strategies for new vs edit mode */}
+                                {subtopicId ? (
+                                    <RichTextEditor
+                                        label=""
+                                        key={`edit-${subtopicId}-${subtopicChangeCounter}`}
+                                        value={formData.description || ''}
+                                        onChange={(content) => {
+                                            handleChange('description', content);
+                                        }}
+                                        error={Boolean(errors.description)}
+                                        placeholder="Enter description here..."
+                                    />
+                                ) : (
+                                    <RichTextEditor
+                                        label=""
+                                        key="new-subtopic"
+                                        value={formData.description || ''}
+                                        onChange={(content) => {
+                                            handleChange('description', content);
+                                        }}
+                                        error={Boolean(errors.description)}
+                                        placeholder="Enter description here..."
+                                    />
+                                )}
                                 {errors.description && (
                                     <FormHelperText error>{errors.description}</FormHelperText>
                                 )}

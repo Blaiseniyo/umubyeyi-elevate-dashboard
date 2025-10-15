@@ -4,7 +4,8 @@ import {
     Subtopic,
     Section,
     CreateTopicRequest,
-    UpdateTopicRequest
+    UpdateTopicRequest,
+    HealthHubFilters
 } from '../../types/healthHub';
 import { healthHubService } from '../../services/healthHubService';
 
@@ -35,10 +36,14 @@ const initialState: HealthHubState = {
 // Async thunks
 export const fetchTopics = createAsyncThunk(
     'healthHub/fetchTopics',
-    async (params: { page?: number; limit?: number; search?: string }, { rejectWithValue }) => {
+    async (params: HealthHubFilters, { rejectWithValue }) => {
         try {
             const response = await healthHubService.getTopics(params);
-            return response.data;
+            if (response.success) {
+                return response.data;
+            } else {
+                return rejectWithValue(response.message || 'Failed to fetch topics');
+            }
         } catch (error) {
             return rejectWithValue(error instanceof Error ? error.message : 'An error occurred');
         }
@@ -50,7 +55,11 @@ export const fetchTopicById = createAsyncThunk(
     async (topicId: number, { rejectWithValue }) => {
         try {
             const response = await healthHubService.getTopicById(topicId);
-            return response.data;
+            if (response.success) {
+                return response.data;
+            } else {
+                return rejectWithValue(response.message || 'Failed to fetch topic');
+            }
         } catch (error) {
             return rejectWithValue(error instanceof Error ? error.message : 'An error occurred');
         }
@@ -74,7 +83,11 @@ export const createTopic = createAsyncThunk(
     async (data: CreateTopicRequest, { rejectWithValue }) => {
         try {
             const response = await healthHubService.createTopic(data);
-            return response.data;
+            if (response.success) {
+                return response.data;
+            } else {
+                return rejectWithValue(response.message || 'Failed to create topic');
+            }
         } catch (error) {
             return rejectWithValue(error instanceof Error ? error.message : 'An error occurred');
         }
@@ -86,7 +99,11 @@ export const updateTopic = createAsyncThunk(
     async ({ id, data }: { id: number; data: UpdateTopicRequest }, { rejectWithValue }) => {
         try {
             const response = await healthHubService.updateTopic(id, data);
-            return response.data;
+            if (response.success) {
+                return response.data;
+            } else {
+                return rejectWithValue(response.message || 'Failed to update topic');
+            }
         } catch (error) {
             return rejectWithValue(error instanceof Error ? error.message : 'An error occurred');
         }
@@ -97,8 +114,12 @@ export const deleteTopic = createAsyncThunk(
     'healthHub/deleteTopic',
     async (topicId: number, { rejectWithValue }) => {
         try {
-            await healthHubService.deleteTopic(topicId);
-            return topicId;
+            const response = await healthHubService.deleteTopic(topicId);
+            if (response.success) {
+                return topicId;
+            } else {
+                return rejectWithValue(response.message || 'Failed to delete topic');
+            }
         } catch (error) {
             return rejectWithValue(error instanceof Error ? error.message : 'An error occurred');
         }
@@ -134,6 +155,7 @@ const healthHubSlice = createSlice({
             })
             .addCase(fetchTopics.fulfilled, (state, action) => {
                 state.loading = false;
+                // Handle the updated API response format
                 state.topics = action.payload.data;
                 state.totalItems = action.payload.total;
             })

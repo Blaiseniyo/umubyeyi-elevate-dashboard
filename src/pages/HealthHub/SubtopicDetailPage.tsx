@@ -37,8 +37,8 @@ const SubtopicDetailPage: React.FC = () => {
     }, [dispatch, subtopicId]);
 
     useEffect(() => {
-        if (currentSubtopic?.description) {
-            setDescriptionContent(currentSubtopic.description);
+        if (currentSubtopic?.content) {
+            setDescriptionContent(currentSubtopic.content);
         }
     }, [currentSubtopic]);
 
@@ -69,7 +69,7 @@ const SubtopicDetailPage: React.FC = () => {
 
     const handleOpenDescriptionDialog = () => {
         if (currentSubtopic) {
-            setDescriptionContent(currentSubtopic.description);
+            setDescriptionContent(currentSubtopic.content);
             setOpenDescriptionDialog(true);
         }
     };
@@ -82,7 +82,7 @@ const SubtopicDetailPage: React.FC = () => {
         try {
             const healthHubService = await import('../../services/healthHubService').then(mod => mod.healthHubService);
             const response = await healthHubService.updateSubtopic(Number(subtopicId), {
-                description: descriptionContent
+                content: descriptionContent
             });
 
             if (response.success) {
@@ -111,11 +111,8 @@ const SubtopicDetailPage: React.FC = () => {
                 : await healthHubService.createSection(payload);
 
             if (response.success) {
-                showToast(`Section ${selectedSection ? 'updated' : 'created'} successfully`, 'success');
                 dispatch(fetchSubtopicById(Number(subtopicId)));
                 handleCloseSectionDialog();
-            } else {
-                showToast(`Failed to ${selectedSection ? 'update' : 'create'} section`, 'error');
             }
         } catch (error) {
             console.error(`Error ${selectedSection ? 'updating' : 'creating'} section:`, error);
@@ -152,12 +149,13 @@ const SubtopicDetailPage: React.FC = () => {
                 const healthHubService = await import('../../services/healthHubService').then(mod => mod.healthHubService);
                 const response = await healthHubService.deleteSubsection(id);
 
-                if (response.success) {
-                    showToast('Subsection deleted successfully', 'success');
-                    dispatch(fetchSubtopicById(Number(subtopicId)));
-                } else {
-                    showToast('Failed to delete subsection', 'error');
-                }
+                console.log('Delete subsection response:', response);
+                // if (response.success || response.status_code === 204) {
+                //     showToast('Subsection deleted successfully', 'success');
+                //     dispatch(fetchSubtopicById(Number(subtopicId)));
+                // } else {
+                //     showToast('Failed to delete subsection', 'error');
+                // }
             } catch (error) {
                 console.error('Error deleting subsection:', error);
                 showToast('Error deleting subsection', 'error');
@@ -193,7 +191,7 @@ const SubtopicDetailPage: React.FC = () => {
                     </MuiLink>
                     <MuiLink
                         component={Link}
-                        to={`/health-hub/topics/${currentSubtopic.topic_id}`}
+                        to={`/health-hub/topics/${currentSubtopic.parent_topic_id}`}
                         underline="hover"
                         color="inherit"
                     >
@@ -208,14 +206,14 @@ const SubtopicDetailPage: React.FC = () => {
                             {currentSubtopic.name}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                            Duration: {currentSubtopic.duration}
+                            Duration: {currentSubtopic.course_duration}
                         </Typography>
                     </Box>
 
                     <Button
                         variant="outlined"
                         component={Link}
-                        to={`/health-hub/topics/${currentSubtopic.topic_id}`}
+                        to={`/health-hub/topics/${currentSubtopic.parent_topic_id}`}
                         startIcon={<ArrowBackIcon />}
                     >
                         Back to {currentSubtopic.topic_name}
@@ -223,9 +221,9 @@ const SubtopicDetailPage: React.FC = () => {
                 </Box>
 
                 {/* Description Section */}
-                <DescriptionSection 
-                    description={currentSubtopic.description} 
-                    onOpenDescriptionDialog={handleOpenDescriptionDialog} 
+                <DescriptionSection
+                    description={currentSubtopic.content}
+                    onOpenDescriptionDialog={handleOpenDescriptionDialog}
                 />
 
                 {/* Tabs Section */}

@@ -15,16 +15,19 @@ import {
     IconButton,
     Divider,
     Breadcrumbs,
-    Link as MuiLink,
-    Chip
+    Link as MuiLink
 } from '@mui/material';
+import ConfirmDialog from '../../components/Common/ConfirmDialog';
 import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
+import VideocamIcon from '@mui/icons-material/Videocam';
+import HeadphonesIcon from '@mui/icons-material/Headphones';
+import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useToast } from '../../hooks';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { fetchTopicById } from '../../store/slices/healthHubSlice';
@@ -41,11 +44,21 @@ const TopicDetailPage: React.FC = () => {
     const { showToast } = useToast();
     const navigate = useNavigate();
 
+    // Confirmation dialog state
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [deleteItemType, setDeleteItemType] = useState<'subtopic' | 'topic'>('subtopic');
+    const [deleteItemId, setDeleteItemId] = useState<number | null>(null);
+    const [deleteItemName, setDeleteItemName] = useState('');
+
+    // Use location to detect when we need to reload data
+    const location = useLocation();
+
     useEffect(() => {
         if (topicId) {
+            console.log('Fetching topic data for ID:', topicId);
             dispatch(fetchTopicById(Number(topicId)));
         }
-    }, [dispatch, topicId]);
+    }, [dispatch, topicId, location.key]); // location.key changes on navigation
 
     useEffect(() => {
         if (error) {
@@ -60,7 +73,7 @@ const TopicDetailPage: React.FC = () => {
                 const searchLower = search.toLowerCase();
                 const filtered = currentTopic.subtopics.filter(subtopic =>
                     subtopic.name.toLowerCase().includes(searchLower) ||
-                    subtopic.description.toLowerCase().includes(searchLower)
+                    (subtopic.content && subtopic.content.toLowerCase().includes(searchLower))
                 );
                 setFilteredSubtopics(filtered);
             } else {
@@ -82,26 +95,62 @@ const TopicDetailPage: React.FC = () => {
     // We no longer need these functions since we're using page navigation
     // instead of a dialog for subtopic creation/editing
 
-    const handleDeleteSubtopic = async (id: number) => {
-        if (window.confirm('Are you sure you want to delete this subtopic? This will also delete all sections and subsections within.')) {
-            try {
-                // Use the healthHubService directly since we haven't implemented
-                // subtopic delete action in the Redux slice yet
-                const healthHubService = await import('../../services/healthHubService').then(mod => mod.healthHubService);
-                const response = await healthHubService.deleteSubtopic(id);
+    const openDeleteConfirmation = (id: number, name: string, type: 'subtopic' | 'topic') => {
+        setDeleteItemId(id);
+        setDeleteItemName(name);
+        setDeleteItemType(type);
+        setDeleteDialogOpen(true);
+    };
 
+    const handleConfirmDelete = async () => {
+        if (!deleteItemId) return;
+
+        try {
+            const healthHubService = await import('../../services/healthHubService').then(mod => mod.healthHubService);
+            let response;
+
+            if (deleteItemType === 'subtopic') {
+                response = await healthHubService.deleteSubtopic(deleteItemId);
                 if (response.success) {
                     showToast('Subtopic deleted successfully', 'success');
-                    // Refresh the topic data
-                    dispatch(fetchTopicById(Number(topicId)));
+                    // Refresh the topic data to show updated subtopics
+                    await dispatch(fetchTopicById(Number(topicId)));
+                    // Force a re-render by updating the search term slightly
+                    setSearch(search => search + " ");
+                    setTimeout(() => setSearch(search => search.trim()), 10);
                 } else {
                     showToast('Failed to delete subtopic', 'error');
                 }
-            } catch (error) {
-                console.error('Error deleting subtopic:', error);
-                showToast('Error deleting subtopic', 'error');
+            } else if (deleteItemType === 'topic' && topicId) {
+                response = await healthHubService.deleteTopic(deleteItemId);
+                if (response.success) {
+                    showToast('Topic deleted successfully', 'success');
+                    // Navigate back to the topics list with a refresh parameter to force data reload
+                    navigate('/health-hub?refresh=' + Date.now());
+                } else {
+                    showToast('Failed to delete topic', 'error');
+                }
             }
+        } catch (error) {
+            console.error(`Error deleting ${deleteItemType}:`, error);
+            showToast(`Error deleting ${deleteItemType}`, 'error');
+        } finally {
+            setDeleteDialogOpen(false);
+            setDeleteItemId(null);
         }
+    };
+
+    const handleCancelDelete = () => {
+        setDeleteDialogOpen(false);
+        setDeleteItemId(null);
+    };
+
+    const handleDeleteSubtopic = (id: number, name: string = '') => {
+        openDeleteConfirmation(id, name || `Subtopic #${id}`, 'subtopic');
+    };
+
+    const handleDeleteTopic = (id: number, name: string = '') => {
+        openDeleteConfirmation(id, name || `Topic #${id}`, 'topic');
     };
 
     const navigateToSubtopic = (id: number) => {
@@ -142,21 +191,26 @@ const TopicDetailPage: React.FC = () => {
                         <Typography variant="h4" component="h1" gutterBottom>
                             {currentTopic.name}
                         </Typography>
-                        {currentTopic.description && (
-                            <Typography variant="body1" color="text.secondary" paragraph>
-                                {currentTopic.description}
-                            </Typography>
-                        )}
                     </Box>
 
-                    <Button
-                        variant="outlined"
-                        component={Link}
-                        to="/health-hub"
-                        startIcon={<ArrowBackIcon />}
-                    >
-                        Back to Topics
-                    </Button>
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                        <Button
+                            variant="outlined"
+                            color="error"
+                            onClick={() => handleDeleteTopic(Number(topicId), currentTopic.name)}
+                            startIcon={<DeleteIcon />}
+                        >
+                            Delete Topic
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            component={Link}
+                            to="/health-hub"
+                            startIcon={<ArrowBackIcon />}
+                        >
+                            Back to Topics
+                        </Button>
+                    </Box>
                 </Box>
 
                 <Paper sx={{ p: 3, mb: 4 }}>
@@ -228,11 +282,11 @@ const TopicDetailPage: React.FC = () => {
                                         onClick={() => navigateToSubtopic(subtopic.id)}
                                         sx={{ display: 'flex', flexDirection: 'column', height: '100%', alignItems: 'stretch' }}
                                     >
-                                        {subtopic.thumbnail && (
+                                        {subtopic.cover_image_url && (
                                             <CardMedia
                                                 component="img"
                                                 sx={{ height: 180, objectFit: 'cover' }}
-                                                image={subtopic.signed_thumbnail || subtopic.thumbnail}
+                                                image={subtopic.cover_image_url}
                                                 alt={subtopic.name}
                                             />
                                         )}
@@ -241,7 +295,7 @@ const TopicDetailPage: React.FC = () => {
                                                 <Typography variant="h6" component="div" fontWeight="500">
                                                     {subtopic.name}
                                                 </Typography>
-                                                {subtopic.duration && (
+                                                {subtopic.course_duration && (
                                                     <Typography
                                                         variant="caption"
                                                         sx={{
@@ -253,53 +307,75 @@ const TopicDetailPage: React.FC = () => {
                                                             fontWeight: 'medium'
                                                         }}
                                                     >
-                                                        {subtopic.duration}
+                                                        {subtopic.course_duration}
                                                     </Typography>
                                                 )}
                                             </Box>
 
-                                            <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
-                                                <Box
-                                                    sx={{
-                                                        width: 8,
-                                                        height: 8,
-                                                        borderRadius: '50%',
-                                                        bgcolor: 'success.main',
-                                                        mr: 1
-                                                    }}
-                                                />
-                                                <Typography variant="body2" color="text.secondary">
-                                                    {subtopic.sections?.length || 0} {subtopic.sections?.length === 1 ? 'Section' : 'Sections'}
-                                                </Typography>
-                                            </Box>
-
-                                            {subtopic.sections && subtopic.sections.length > 0 && (
-                                                <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                                                    {subtopic.sections.slice(0, 2).map((section) => (
-                                                        <Chip
-                                                            key={section.id}
-                                                            label={section.name}
-                                                            size="small"
-                                                            variant="outlined"
-                                                            sx={{
-                                                                bgcolor: 'background.paper',
-                                                                borderColor: 'divider'
-                                                            }}
-                                                        />
-                                                    ))}
-                                                    {subtopic.sections.length > 2 && (
-                                                        <Chip
-                                                            label={`+${subtopic.sections.length - 2} more`}
-                                                            size="small"
-                                                            variant="outlined"
-                                                            sx={{
-                                                                bgcolor: 'background.paper',
-                                                                borderColor: 'divider'
-                                                            }}
-                                                        />
-                                                    )}
+                                            <Box sx={{ display: 'flex', gap: 2, mt: 2, flexWrap: 'wrap' }}>
+                                                {/* Sections count */}
+                                                <Box sx={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    bgcolor: 'success.light',
+                                                    borderRadius: 1,
+                                                    px: 1.5,
+                                                    py: 0.5
+                                                }}>
+                                                    <LibraryBooksIcon
+                                                        fontSize="small"
+                                                        sx={{
+                                                            color: 'success.dark',
+                                                            mr: 0.5
+                                                        }}
+                                                    />
+                                                    <Typography variant="body2" color="success.dark" fontWeight="medium">
+                                                        {subtopic.sections?.length || 0} {subtopic.sections?.length === 1 ? 'Section' : 'Sections'}
+                                                    </Typography>
                                                 </Box>
-                                            )}
+
+                                                {/* Videos count */}
+                                                <Box sx={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    bgcolor: 'info.light',
+                                                    borderRadius: 1,
+                                                    px: 1.5,
+                                                    py: 0.5
+                                                }}>
+                                                    <VideocamIcon
+                                                        fontSize="small"
+                                                        sx={{
+                                                            color: 'info.dark',
+                                                            mr: 0.5
+                                                        }}
+                                                    />
+                                                    <Typography variant="body2" color="info.dark" fontWeight="medium">
+                                                        {subtopic.videos?.length || 0} {subtopic.videos?.length === 1 ? 'Video' : 'Videos'}
+                                                    </Typography>
+                                                </Box>
+
+                                                {/* Podcasts count */}
+                                                <Box sx={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    bgcolor: 'warning.light',
+                                                    borderRadius: 1,
+                                                    px: 1.5,
+                                                    py: 0.5
+                                                }}>
+                                                    <HeadphonesIcon
+                                                        fontSize="small"
+                                                        sx={{
+                                                            color: 'warning.dark',
+                                                            mr: 0.5
+                                                        }}
+                                                    />
+                                                    <Typography variant="body2" color="warning.dark" fontWeight="medium">
+                                                        {subtopic.podcasts?.length || 0} {subtopic.podcasts?.length === 1 ? 'Podcast' : 'Podcasts'}
+                                                    </Typography>
+                                                </Box>
+                                            </Box>
                                         </CardContent>
                                     </CardActionArea>
                                     <Divider />
@@ -328,7 +404,7 @@ const TopicDetailPage: React.FC = () => {
                                                 color="error"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    handleDeleteSubtopic(subtopic.id);
+                                                    handleDeleteSubtopic(subtopic.id, subtopic.name);
                                                 }}
                                             >
                                                 <DeleteIcon fontSize="small" />
@@ -342,7 +418,17 @@ const TopicDetailPage: React.FC = () => {
                 </Paper>
             </Box>
 
-            {/* SubtopicDialog removed - using page navigation instead */}
+            {/* Confirmation Dialog for Delete Actions */}
+            <ConfirmDialog
+                open={deleteDialogOpen}
+                title={`Delete ${deleteItemType === 'topic' ? 'Topic' : 'Subtopic'}`}
+                message={`Are you sure you want to delete ${deleteItemName}? This action cannot be undone.`}
+                onConfirm={handleConfirmDelete}
+                onCancel={handleCancelDelete}
+                confirmText="Delete"
+                cancelText="Cancel"
+                severity="error"
+            />
         </Container>
     );
 };

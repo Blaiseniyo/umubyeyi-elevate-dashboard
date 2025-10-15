@@ -160,11 +160,12 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
                     {label}
                 </Typography>
             )}
+            
             <CustomRichTextEditor
                 ref={rteRef}
                 editable={editable}
                 extensions={extensions}
-                content={value}
+                content={value || ''} /* Ensure we pass at least an empty string */
                 renderControls={() => <EditorMenuControls />}
                 onUpdate={handleContentChange}
                 editorProps={{

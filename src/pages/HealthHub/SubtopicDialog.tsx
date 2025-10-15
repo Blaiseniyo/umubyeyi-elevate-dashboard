@@ -17,9 +17,9 @@ interface SubtopicDialogProps {
     onClose: () => void;
     onSave: (data: {
         name: string;
-        thumbnail: string;
-        description: string;
-        duration: string;
+        cover_image_url: string;
+        content: string;
+        course_duration: string;
     }) => void;
     subtopic: Subtopic | null;
 }
@@ -39,9 +39,9 @@ const SubtopicDialog: React.FC<SubtopicDialogProps> = ({ open, onClose, onSave, 
     useEffect(() => {
         if (subtopic) {
             setName(subtopic.name || '');
-            setThumbnail(subtopic.thumbnail || '');
-            setDescription(subtopic.description || '');
-            setDuration(subtopic.duration || '');
+            setThumbnail(subtopic.cover_image_url || '');
+            setDescription(subtopic.content || '');
+            setDuration(subtopic.course_duration || '');
         } else {
             setName('');
             setThumbnail('');
@@ -88,9 +88,9 @@ const SubtopicDialog: React.FC<SubtopicDialogProps> = ({ open, onClose, onSave, 
         if (validateForm()) {
             onSave({
                 name,
-                thumbnail,
-                description,
-                duration
+                cover_image_url: thumbnail,
+                content: description,
+                course_duration: duration
             });
         }
     };

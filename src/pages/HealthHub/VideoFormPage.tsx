@@ -153,7 +153,7 @@ const VideoFormPage: React.FC = () => {
                     {currentSubtopic && (
                         <MuiLink
                             component={Link}
-                            to={`/health-hub/topics/${currentSubtopic.topic_id}`}
+                            to={`/health-hub/topics/${currentSubtopic.parent_topic_id}`}
                             underline="hover"
                             color="inherit"
                         >

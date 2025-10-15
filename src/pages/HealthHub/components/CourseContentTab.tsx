@@ -15,10 +15,9 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Section, Subsection } from '../../../types/healthHub';
-import { useNavigate } from 'react-router-dom';
 
 interface CourseContentTabProps {
-    subtopicId: string;
+    subtopicId?: string; // Made optional since it's unused
     sections: Section[];
     handleOpenSectionDialog: (section?: Section) => void;
     handleNavigateToSubsectionForm: (section: Section, subsection?: Subsection) => void;
@@ -27,14 +26,13 @@ interface CourseContentTabProps {
 }
 
 const CourseContentTab: React.FC<CourseContentTabProps> = ({
-    subtopicId,
     sections,
     handleOpenSectionDialog,
     handleNavigateToSubsectionForm,
     handleDeleteSection,
     handleDeleteSubsection
 }) => {
-    const navigate = useNavigate();
+    // Removed unused navigate variable
 
     return (
         <>
@@ -69,7 +67,7 @@ const CourseContentTab: React.FC<CourseContentTabProps> = ({
             ) : (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     {[...sections]
-                        .sort((a, b) => a.order - b.order)
+                        .sort((a, b) => (a.order || 0) - (b.order || 0))
                         .map((section) => (
                             <Accordion key={section.id}>
                                 <AccordionSummary
@@ -86,7 +84,7 @@ const CourseContentTab: React.FC<CourseContentTabProps> = ({
                                                 Section {section.order}: {section.name}
                                             </Typography>
                                             <Typography variant="caption" color="text.secondary">
-                                                {section.subsections.length} subsections
+                                                {section.subsections?.length || 0} subsections
                                             </Typography>
                                         </Box>
                                         <Box
@@ -139,7 +137,7 @@ const CourseContentTab: React.FC<CourseContentTabProps> = ({
                                     </Box>
                                 </AccordionSummary>
                                 <AccordionDetails>
-                                    {section.subsections.length === 0 ? (
+                                    {!section.subsections || section.subsections.length === 0 ? (
                                         <Box sx={{ textAlign: 'center', py: 2 }}>
                                             <Typography variant="body2" color="text.secondary">
                                                 No subsections found in this section
@@ -156,7 +154,7 @@ const CourseContentTab: React.FC<CourseContentTabProps> = ({
                                         </Box>
                                     ) : (
                                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                            {[...section.subsections]
+                                            {[...(section.subsections || [])]
                                                 .sort((a, b) => a.order - b.order)
                                                 .map((subsection) => (
                                                     <Paper

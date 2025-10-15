@@ -14,32 +14,28 @@ import { Topic } from '../../types/healthHub';
 interface TopicDialogProps {
     open: boolean;
     onClose: () => void;
-    onSave: (data: { name: string; description: string }) => void;
+    onSave: (data: { name: string }) => void;
     topic: Topic | null;
 }
 
 const TopicDialog: React.FC<TopicDialogProps> = ({ open, onClose, onSave, topic }) => {
     const [name, setName] = useState('');
-    const [description, setDescription] = useState('');
     const [errors, setErrors] = useState({
-        name: '',
-        description: ''
+        name: ''
     });
 
     useEffect(() => {
         if (topic) {
             setName(topic.name || '');
-            setDescription(topic.description || '');
         } else {
             setName('');
-            setDescription('');
         }
-        setErrors({ name: '', description: '' });
+        setErrors({ name: '' });
     }, [topic, open]);
 
     const validateForm = (): boolean => {
         let isValid = true;
-        const newErrors = { name: '', description: '' };
+        const newErrors = { name: '' };
 
         if (!name.trim()) {
             newErrors.name = 'Name is required';
@@ -53,8 +49,7 @@ const TopicDialog: React.FC<TopicDialogProps> = ({ open, onClose, onSave, topic 
     const handleSubmit = () => {
         if (validateForm()) {
             onSave({
-                name,
-                description
+                name
             });
         }
     };
@@ -78,17 +73,6 @@ const TopicDialog: React.FC<TopicDialogProps> = ({ open, onClose, onSave, topic 
                         required
                         error={!!errors.name}
                         helperText={errors.name}
-                    />
-
-                    <TextField
-                        label="Description (optional)"
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        fullWidth
-                        multiline
-                        rows={4}
-                        error={!!errors.description}
-                        helperText={errors.description}
                     />
                 </Box>
             </DialogContent>

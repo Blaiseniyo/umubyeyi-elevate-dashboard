@@ -12,11 +12,14 @@ export interface Subsection {
 export interface Section {
     id: number;
     name: string;
-    order: number;
-    subtopic_id: number;
-    subsections: Subsection[];
-    created_at: string;
-    updated_at: string;
+    content?: string;
+    cover_image_url?: string;
+    order?: number;
+    subtopic_id?: number;
+    parent_sub_topic_id?: number;
+    subsections?: Subsection[];
+    created_at?: string;
+    updated_at?: string;
 }
 
 export interface Video {
@@ -46,12 +49,13 @@ export interface Podcast {
 export interface Subtopic {
     id: number;
     name: string;
-    thumbnail: string;
+    cover_image_url: string;
     signed_thumbnail?: string; // URL for displaying the image
-    description: string; // Rich text description including "About Course" and "What You Will Learn"
-    topic_id: number;
+    content: string; // Rich text description including "About Course" and "What You Will Learn"
+    parent_topic_id: number;
     topic_name?: string;
-    duration: string; // e.g., "3h"
+    course_duration_minutes: number;
+    course_duration: string; // e.g., "2 Hrs 30 Min"
     sections: Section[];
     videos?: Video[];
     podcasts?: Podcast[];
@@ -62,37 +66,49 @@ export interface Subtopic {
 export interface Topic {
     id: number;
     name: string;
-    description?: string;
-    subtopics: Subtopic[];
+    created_by?: string;
+    updated_by?: string;
+    videos?: Video[];
+    podcasts?: Podcast[];
+    sub_topics?: SubTopicSummary[]; // For the summary view in the topic list
+    subtopics?: Subtopic[]; // For compatibility with existing code
     created_at: string;
-    updated_at: string;
+    updated_at: string | null;
+}
+
+export interface SubTopicSummary {
+    id: number;
+    parent_topic_id: number;
+    name: string;
+    cover_image_url: string;
+    course_duration_minutes?: number;
+    course_duration?: string;
+    sections?: Section[];
+    videos?: Video[];
+    podcasts?: Podcast[];
 }
 
 // Request Interfaces
 export interface CreateTopicRequest {
     name: string;
-    description?: string;
 }
 
 export interface UpdateTopicRequest {
     name?: string;
-    description?: string;
 }
 
 export interface CreateSubtopicRequest {
     name: string;
-    thumbnail: string;
-    description: string;
-    topic_id: number;
-    duration: string;
+    cover_image_url: string;
+    content: string;
+    course_duration_minutes: number;
 }
 
 export interface UpdateSubtopicRequest {
     name?: string;
-    thumbnail?: string;
-    description?: string;
-    topic_id?: number;
-    duration?: string;
+    cover_image_url?: string;
+    content?: string;
+    course_duration_minutes?: number;
 }
 
 export interface CreateSectionRequest {
@@ -151,6 +167,23 @@ export interface UpdatePodcastRequest {
     file?: File;
     url?: string;
     thumbnail?: string;
+}
+
+// API Response Types
+export interface ApiResponse<T> {
+    success: boolean;
+    status_code: number;
+    message: string;
+    data: T;
+}
+
+export interface ApiListResponse<T> {
+    message: string;
+    count: number;
+    next: string | null;
+    previous: string | null;
+    status_code: number;
+    data: T[];
 }
 
 // Filters and Params
