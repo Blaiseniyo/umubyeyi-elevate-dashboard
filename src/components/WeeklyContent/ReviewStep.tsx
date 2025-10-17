@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Typography, Stack, Card, CardHeader, CardContent, Chip, Divider } from '@mui/material';
-import { Preview, ChildCare, Lightbulb, Psychology, Image as ImageIcon, MonitorWeight, Height, CameraAlt } from '@mui/icons-material';
+import { Preview, ChildCare, Image as ImageIcon, MonitorWeight, CameraAlt, Mood, AccessibilityNew } from '@mui/icons-material';
 import { WeeklyContent } from '../../types';
 
 interface ReviewStepProps {
@@ -21,10 +21,6 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ content }) => {
         if (week <= 27) return 'info';
         return 'warning';
     };
-
-    const validSymptoms = (content.symptoms || []).filter(symptom =>
-        symptom.name?.trim() && symptom.image_url?.trim()
-    );
 
     const hasImage = (imageUrl: string | undefined): boolean => {
         return !!imageUrl && imageUrl.trim().length > 0;
@@ -59,13 +55,23 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ content }) => {
                                 </Box>
                             </Box>
                         )}
-                        {content.tips_and_advice && (
+                        {content.what_you_might_feel && (
                             <Box>
                                 <Typography variant="h6" sx={{ mb: 2, color: 'primary.main', display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <Lightbulb /> Tips & Advice
+                                    <Mood /> What You Might Feel
                                 </Typography>
                                 <Box sx={{ p: 3, bgcolor: 'white', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
-                                    <div dangerouslySetInnerHTML={{ __html: content.tips_and_advice }} />
+                                    <div dangerouslySetInnerHTML={{ __html: content.what_you_might_feel }} />
+                                </Box>
+                            </Box>
+                        )}
+                        {content.body_changes && (
+                            <Box>
+                                <Typography variant="h6" sx={{ mb: 2, color: 'primary.main', display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <AccessibilityNew /> Body Changes
+                                </Typography>
+                                <Box sx={{ p: 3, bgcolor: 'white', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
+                                    <div dangerouslySetInnerHTML={{ __html: content.body_changes }} />
                                 </Box>
                             </Box>
                         )}
@@ -82,7 +88,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ content }) => {
                         <Stack spacing={4}>
                             <Box>
                                 <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <ImageIcon color="primary" /> Baby Size: {content.baby_size}
+                                    <ImageIcon color="primary" /> Baby Size
                                 </Typography>
                                 {hasImage(content.baby_size_image_url) && (
                                     <Box sx={{ mb: 2, textAlign: 'center' }}>
@@ -104,7 +110,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ content }) => {
 
                             <Box>
                                 <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <MonitorWeight color="primary" /> Baby Weight: {content.baby_weight}
+                                    <MonitorWeight color="primary" /> Baby Weight
                                 </Typography>
                                 {hasImage(content.baby_weight_image_url) && (
                                     <Box sx={{ mb: 2, textAlign: 'center' }}>
@@ -118,28 +124,6 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ content }) => {
                                 {content.baby_weight_description && (
                                     <Box sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
                                         <div dangerouslySetInnerHTML={{ __html: content.baby_weight_description }} />
-                                    </Box>
-                                )}
-                            </Box>
-
-                            <Divider />
-
-                            <Box>
-                                <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <Height color="primary" /> Baby Length: {content.baby_height}
-                                </Typography>
-                                {hasImage(content.baby_height_image_url) && (
-                                    <Box sx={{ mb: 2, textAlign: 'center' }}>
-                                        <img
-                                            src={content.signed_baby_height_image_url || content.baby_height_image_url}
-                                            alt="Baby Length"
-                                            style={{ maxWidth: '200px', maxHeight: '200px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
-                                        />
-                                    </Box>
-                                )}
-                                {content.baby_height_description && (
-                                    <Box sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
-                                        <div dangerouslySetInnerHTML={{ __html: content.baby_height_description }} />
                                     </Box>
                                 )}
                             </Box>
@@ -171,41 +155,6 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ content }) => {
                         </Stack>
                     </CardContent>
                 </Card>
-
-                {/* Symptoms Preview */}
-                {validSymptoms.length > 0 && (
-                    <Card variant="outlined">
-                        <CardHeader
-                            title={`Pregnancy Symptoms (${validSymptoms.length})`}
-                            avatar={<Psychology color="primary" sx={{ fontSize: 32 }} />}
-                        />
-                        <CardContent>
-                            <Stack spacing={3}>
-                                {validSymptoms.map((symptom, index) => (
-                                    <Card key={index} variant="outlined" sx={{ bgcolor: 'grey.50' }}>
-                                        <CardContent>
-                                            <Typography variant="h6" sx={{ mb: 2, color: 'primary.main' }}>
-                                                {symptom.name}
-                                            </Typography>
-                                            {symptom.image_url && (
-                                                <Box sx={{ mb: 2, textAlign: 'center' }}>
-                                                    <img
-                                                        src={symptom.signed_image_url || symptom.image_url}
-                                                        alt={symptom.name}
-                                                        style={{ maxWidth: '200px', maxHeight: '200px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
-                                                    />
-                                                </Box>
-                                            )}
-                                            <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 1 }}>
-                                                <div dangerouslySetInnerHTML={{ __html: symptom.description || '' }} />
-                                            </Box>
-                                        </CardContent>
-                                    </Card>
-                                ))}
-                            </Stack>
-                        </CardContent>
-                    </Card>
-                )}
             </Stack>
         </Box>
     );

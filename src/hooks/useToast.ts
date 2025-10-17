@@ -18,11 +18,31 @@ export const useToast = () => {
     toastService.warning(message);
   }, []);
 
+  // Generic showToast function that can handle different types
+  const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info') => {
+    switch (type) {
+      case 'success':
+        toastService.success(message);
+        break;
+      case 'error':
+        toastService.error(message);
+        break;
+      case 'warning':
+        toastService.warning(message);
+        break;
+      case 'info':
+      default:
+        toastService.info(message);
+        break;
+    }
+  }, []);
+
   return {
     showSuccess,
     showError,
     showInfo,
-    showWarning
+    showWarning,
+    showToast
   };
 };
 

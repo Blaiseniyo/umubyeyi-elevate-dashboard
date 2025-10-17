@@ -34,7 +34,7 @@ const ContentManagement: React.FC = () => {
   const initialTab = urlParams.get('tab') === 'trimesters' ? 1 : 0;
   const [tabValue, setTabValue] = useState(initialTab);
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     // Update the URL with the new tab value
     const newParams = new URLSearchParams(window.location.search);
     newParams.set('tab', newValue === 1 ? 'trimesters' : 'weekly');

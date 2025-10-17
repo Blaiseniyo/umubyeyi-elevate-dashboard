@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { Box, Typography, TextField, Chip, Stack, Card } from '@mui/material';
-import { Info, Lightbulb } from '@mui/icons-material';
+import { Info, Mood, AccessibilityNew } from '@mui/icons-material';
 import RichTextEditor from '../../components/Common/richTextEditor/RichTextEditor';
 import { WeeklyContent } from '../../types';
 
@@ -110,16 +110,31 @@ const BasicInfoStep: React.FC<BasicInfoStepProps> = ({
 
                 <Card variant="outlined" sx={{ p: 3 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                        <Lightbulb color="primary" />
+                        <Mood color="primary" />
                         <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                            Tips & Advice
+                            What You Might Feel
                         </Typography>
                     </Box>
                     <RichTextEditor
-                        label="Helpful Tips and Advice"
-                        value={content?.tips_and_advice || ''}
-                        onChange={(value) => onFormChange('tips_and_advice', value)}
-                        placeholder="Provide helpful tips and advice for this week..."
+                        label="What You Might Feel"
+                        value={content?.what_you_might_feel || ''}
+                        onChange={(value) => onFormChange('what_you_might_feel', value)}
+                        placeholder="Describe what the mother might feel during this week..."
+                    />
+                </Card>
+                
+                <Card variant="outlined" sx={{ p: 3 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                        <AccessibilityNew color="primary" />
+                        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                            Body Changes
+                        </Typography>
+                    </Box>
+                    <RichTextEditor
+                        label="Body Changes"
+                        value={content?.body_changes || ''}
+                        onChange={(value) => onFormChange('body_changes', value)}
+                        placeholder="Describe the body changes during this week..."
                     />
                 </Card>
             </Stack>
