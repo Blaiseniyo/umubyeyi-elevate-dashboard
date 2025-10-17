@@ -32,6 +32,10 @@ import SubsectionFormPage from './pages/HealthHub/SubsectionFormPage';
 import VideoFormPage from './pages/HealthHub/VideoFormPage';
 import PodcastFormPage from './pages/HealthHub/PodcastFormPage';
 
+// Gallery Pages
+import GalleryManagement from './pages/Gallery/GalleryManagement';
+import GalleryPage from './pages/Gallery/GalleryPage';
+
 const AppContent: React.FC = () => {
   return (
     <Router>
@@ -203,6 +207,20 @@ const AppContent: React.FC = () => {
                 <PodcastFormPage />
               </ProtectedRoute>
             }
+          />
+
+          {/* Gallery Routes */}
+          <Route
+            path="gallery"
+            element={
+              <ProtectedRoute requiredRole="staff">
+                <GalleryManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="gallery/view"
+            element={<GalleryPage />}
           />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />

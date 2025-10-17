@@ -22,7 +22,8 @@ import {
   Settings,
   ExitToApp,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  PhotoLibrary
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../hooks';
@@ -36,6 +37,7 @@ const menuItems = [
   { text: 'User Management', icon: <People />, path: '/users' },
   { text: 'Pregnancy Tracker', icon: <PregnantWoman />, path: '/pregnancy-tracker/content' },
   { text: 'Health Hub', icon: <School />, path: '/health-hub' },
+  { text: 'Gallery', icon: <PhotoLibrary />, path: '/gallery' },
   { text: 'Settings', icon: <Settings />, path: '/settings' },
 ];
 

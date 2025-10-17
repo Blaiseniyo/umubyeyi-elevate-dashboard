@@ -112,3 +112,4 @@ export interface PaginatedResponse<T> {
 
 // Export Health Hub types
 export * from './healthHub';
+export * from './gallery';
