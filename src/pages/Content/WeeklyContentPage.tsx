@@ -382,7 +382,7 @@ const WeeklyContentPage: React.FC = () => {
 
                         {!isViewMode && (
                             <>
-                                {activeStep < 3 ? (
+                                {activeStep < 2 ? (
                                     <Button
                                         variant="contained"
                                         onClick={handleNextStep}
