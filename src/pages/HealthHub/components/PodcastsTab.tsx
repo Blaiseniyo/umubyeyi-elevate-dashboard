@@ -17,7 +17,7 @@ import { Podcast } from '../../../types/healthHub';
 interface PodcastsTabProps {
     subtopicId: string;
     podcasts: Podcast[];
-    loadingPodcasts: boolean;
+    loadingPodcasts?: boolean;
     handleDeletePodcast: (id: number) => void;
 }
 
@@ -44,11 +44,12 @@ const PodcastsTab: React.FC<PodcastsTabProps> = ({
 
             <Divider sx={{ mb: 3 }} />
 
-            {loadingPodcasts ? (
+            {/* {loadingPodcasts ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
                     <LoadingSpinner />
                 </Box>
-            ) : podcasts.length === 0 ? (
+            ) :  */}
+            {podcasts.length === 0 ? (
                 <Box sx={{ textAlign: 'center', py: 4 }}>
                     <Typography variant="h6">No podcasts found</Typography>
                     <Typography variant="body2" color="text.secondary" paragraph>

@@ -6,9 +6,7 @@ import {
     Divider,
     Accordion,
     AccordionSummary,
-    AccordionDetails,
-    IconButton,
-    Paper
+    AccordionDetails
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
@@ -66,156 +64,188 @@ const CourseContentTab: React.FC<CourseContentTabProps> = ({
                 </Box>
             ) : (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    {[...sections]
-                        .sort((a, b) => (a.order || 0) - (b.order || 0))
-                        .map((section) => (
-                            <Accordion key={section.id}>
-                                <AccordionSummary
-                                    expandIcon={<ExpandMoreIcon />}
-                                    sx={{
-                                        '&.MuiAccordionSummary-root': {
-                                            '&:hover .section-actions': { opacity: 1 }
-                                        }
-                                    }}
-                                >
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-                                        <Box>
-                                            <Typography variant="subtitle1">
-                                                Section {section.order}: {section.name}
-                                            </Typography>
-                                            <Typography variant="caption" color="text.secondary">
-                                                {section.subsections?.length || 0} subsections
-                                            </Typography>
-                                        </Box>
+                    {sections.map((section) => (
+                        <Accordion key={section.id}>
+                            <AccordionSummary
+                                expandIcon={<ExpandMoreIcon />}
+                                sx={{
+                                    '&.MuiAccordionSummary-root': {
+                                        '&:hover .section-actions': { opacity: 1 }
+                                    }
+                                }}
+                            >
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                                    <Box>
+                                        <Typography variant="subtitle1">
+                                            {section.name}
+                                        </Typography>
+                                        <Typography variant="caption" color="text.secondary">
+                                            {section.sub_sections?.length || 0} subsections
+                                        </Typography>
+                                    </Box>
+                                    <Box
+                                        className="section-actions"
+                                        sx={{
+                                            display: 'flex',
+                                            opacity: 0,
+                                            transition: 'opacity 0.3s'
+                                        }}
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        {/* Changed from IconButton to Box to avoid button nesting */}
                                         <Box
-                                            className="section-actions"
                                             sx={{
                                                 display: 'flex',
-                                                opacity: 0,
-                                                transition: 'opacity 0.3s'
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                color: 'primary.main',
+                                                cursor: 'pointer',
+                                                p: 0.5,
+                                                borderRadius: 1,
+                                                '&:hover': { bgcolor: 'action.hover' }
                                             }}
-                                            onClick={(e) => e.stopPropagation()}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleOpenSectionDialog(section);
+                                            }}
                                         >
-                                            {/* Changed from IconButton to Box to avoid button nesting */}
-                                            <Box
-                                                sx={{
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    color: 'primary.main',
-                                                    cursor: 'pointer',
-                                                    p: 0.5,
-                                                    borderRadius: 1,
-                                                    '&:hover': { bgcolor: 'action.hover' }
-                                                }}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleOpenSectionDialog(section);
-                                                }}
-                                            >
-                                                <EditIcon fontSize="small" />
-                                            </Box>
-                                            <Box
-                                                sx={{
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    color: 'error.main',
-                                                    cursor: 'pointer',
-                                                    p: 0.5,
-                                                    borderRadius: 1,
-                                                    '&:hover': { bgcolor: 'action.hover' }
-                                                }}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleDeleteSection(section.id);
-                                                }}
-                                            >
-                                                <DeleteIcon fontSize="small" />
-                                            </Box>
+                                            <EditIcon fontSize="small" />
+                                        </Box>
+                                        <Box
+                                            sx={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                color: 'error.main',
+                                                cursor: 'pointer',
+                                                p: 0.5,
+                                                borderRadius: 1,
+                                                '&:hover': { bgcolor: 'action.hover' }
+                                            }}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDeleteSection(section.id);
+                                            }}
+                                        >
+                                            <DeleteIcon fontSize="small" />
                                         </Box>
                                     </Box>
-                                </AccordionSummary>
-                                <AccordionDetails>
-                                    {!section.subsections || section.subsections.length === 0 ? (
-                                        <Box sx={{ textAlign: 'center', py: 2 }}>
-                                            <Typography variant="body2" color="text.secondary">
-                                                No subsections found in this section
-                                            </Typography>
+                                </Box>
+                            </AccordionSummary>
+                            <AccordionDetails>
+                                {!section.sub_sections || section.sub_sections.length === 0 ? (
+                                    <Box sx={{ textAlign: 'center', py: 2 }}>
+                                        <Typography variant="body2" color="text.secondary">
+                                            No subsections found in this section
+                                        </Typography>
+                                        <Button
+                                            variant="outlined"
+                                            size="small"
+                                            startIcon={<AddIcon />}
+                                            sx={{ mt: 1 }}
+                                            onClick={() => handleNavigateToSubsectionForm(section)}
+                                        >
+                                            Add Subsection
+                                        </Button>
+                                    </Box>
+                                ) : (
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                        {(section.sub_sections || []).map((subsection) => (
+                                            <Accordion
+                                                key={subsection.id}
+                                                variant="outlined"
+                                                sx={{
+                                                    border: '1px solid rgba(0, 0, 0, 0.12)',
+                                                    borderRadius: '4px',
+                                                    '&:before': { display: 'none' }
+                                                }}
+                                            >
+                                                <AccordionSummary
+                                                    expandIcon={<ExpandMoreIcon />}
+                                                    sx={{
+                                                        '&.MuiAccordionSummary-root': {
+                                                            '&:hover .subsection-actions': { opacity: 1 }
+                                                        }
+                                                    }}
+                                                >
+                                                    <Box sx={{
+                                                        display: 'flex',
+                                                        justifyContent: 'space-between',
+                                                        width: '100%',
+                                                        alignItems: 'center'
+                                                    }}>
+                                                        <Typography variant="subtitle2">
+                                                            {subsection.name}
+                                                        </Typography>
+                                                        <Box
+                                                            className="subsection-actions"
+                                                            sx={{
+                                                                display: 'flex',
+                                                                opacity: 0,
+                                                                transition: 'opacity 0.3s'
+                                                            }}
+                                                            onClick={(e) => e.stopPropagation()}
+                                                        >
+                                                            <Box
+                                                                sx={{
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'center',
+                                                                    color: 'primary.main',
+                                                                    cursor: 'pointer',
+                                                                    p: 0.5,
+                                                                    borderRadius: 1,
+                                                                    '&:hover': { bgcolor: 'action.hover' }
+                                                                }}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleNavigateToSubsectionForm(section, subsection);
+                                                                }}
+                                                            >
+                                                                <EditIcon fontSize="small" />
+                                                            </Box>
+                                                            <Box
+                                                                sx={{
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'center',
+                                                                    color: 'error.main',
+                                                                    cursor: 'pointer',
+                                                                    p: 0.5,
+                                                                    borderRadius: 1,
+                                                                    '&:hover': { bgcolor: 'action.hover' }
+                                                                }}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleDeleteSubsection(subsection.id);
+                                                                }}
+                                                            >
+                                                                <DeleteIcon fontSize="small" />
+                                                            </Box>
+                                                        </Box>
+                                                    </Box>
+                                                </AccordionSummary>
+                                                <AccordionDetails sx={{ p: 2 }}>
+                                                    <Box dangerouslySetInnerHTML={{ __html: subsection.content }} />
+                                                </AccordionDetails>
+                                            </Accordion>
+                                        ))}
+
+                                        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
                                             <Button
                                                 variant="outlined"
                                                 size="small"
                                                 startIcon={<AddIcon />}
-                                                sx={{ mt: 1 }}
                                                 onClick={() => handleNavigateToSubsectionForm(section)}
                                             >
-                                                Add Subsection
+                                                Add Another Subsection
                                             </Button>
                                         </Box>
-                                    ) : (
-                                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                            {[...(section.subsections || [])]
-                                                .sort((a, b) => a.order - b.order)
-                                                .map((subsection) => (
-                                                    <Paper
-                                                        key={subsection.id}
-                                                        variant="outlined"
-                                                        sx={{ p: 2 }}
-                                                    >
-                                                        <Box sx={{
-                                                            display: 'flex',
-                                                            justifyContent: 'space-between',
-                                                            '&:hover .subsection-actions': { opacity: 1 }
-                                                        }}>
-                                                            <Typography variant="subtitle2">
-                                                                {subsection.order}. {subsection.name}
-                                                            </Typography>
-                                                            <Box
-                                                                className="subsection-actions"
-                                                                sx={{
-                                                                    display: 'flex',
-                                                                    opacity: 0,
-                                                                    transition: 'opacity 0.3s'
-                                                                }}
-                                                            >
-                                                                <IconButton
-                                                                    size="small"
-                                                                    color="primary"
-                                                                    onClick={() => handleNavigateToSubsectionForm(section, subsection)}
-                                                                >
-                                                                    <EditIcon fontSize="small" />
-                                                                </IconButton>
-                                                                <IconButton
-                                                                    size="small"
-                                                                    color="error"
-                                                                    onClick={() => handleDeleteSubsection(subsection.id)}
-                                                                >
-                                                                    <DeleteIcon fontSize="small" />
-                                                                </IconButton>
-                                                            </Box>
-                                                        </Box>
-
-                                                        <Divider sx={{ my: 1 }} />
-
-                                                        <Box dangerouslySetInnerHTML={{ __html: subsection.content }} />
-                                                    </Paper>
-                                                ))}
-
-                                            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-                                                <Button
-                                                    variant="outlined"
-                                                    size="small"
-                                                    startIcon={<AddIcon />}
-                                                    onClick={() => handleNavigateToSubsectionForm(section)}
-                                                >
-                                                    Add Another Subsection
-                                                </Button>
-                                            </Box>
-                                        </Box>
-                                    )}
-                                </AccordionDetails>
-                            </Accordion>
-                        ))}
+                                    </Box>
+                                )}
+                            </AccordionDetails>
+                        </Accordion>
+                    ))}
                 </Box>
             )}
         </>

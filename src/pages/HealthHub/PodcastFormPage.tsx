@@ -214,14 +214,6 @@ const PodcastFormPage: React.FC = () => {
                         </FormControl>
 
                         <FormControl fullWidth sx={{ mb: 3 }} error={!!errors.url}>
-                            {/* <Box sx={{ mb: 2 }}>
-                                <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                                    Upload Audio File
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
-                                    Large audio files will be split into small chunks for reliable upload
-                                </Typography>
-                            </Box> */}
 
                             {/* Use VideoUpload component with audio accept type */}
                             <VideoUpload
@@ -257,9 +249,6 @@ const PodcastFormPage: React.FC = () => {
                         </FormControl>
 
                         <FormControl fullWidth sx={{ mb: 3 }}>
-                            <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                                Cover Image
-                            </Typography>
 
                             {/* Use ImageUpload component for the thumbnail */}
                             <ImageUpload

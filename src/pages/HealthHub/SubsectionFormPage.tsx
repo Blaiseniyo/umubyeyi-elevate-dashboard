@@ -14,7 +14,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useToast } from '../../hooks';
 import RichTextEditor from '../../components/Common/richTextEditor/RichTextEditor';
-import { healthHubService } from '../../services/healthHubService';
+// Import dynamically to ensure latest version is used
 import LoadingSpinner from '../../components/Common/LoadingSpinner';
 import { Subsection, Section } from '../../types/healthHub';
 
@@ -34,12 +34,10 @@ const SubsectionFormPage: React.FC = () => {
 
     const [name, setName] = useState('');
     const [content, setContent] = useState('');
-    const [order, setOrder] = useState(1);
 
     const [errors, setErrors] = useState({
         name: '',
-        content: '',
-        order: ''
+        content: ''
     });
 
     // Fetch section and subsection data
@@ -47,6 +45,9 @@ const SubsectionFormPage: React.FC = () => {
         const fetchData = async () => {
             try {
                 setLoading(true);
+
+                // Dynamically import to ensure we get the latest version
+                const { healthHubService } = await import('../../services/healthHubService');
 
                 if (sectionId) {
                     const sectionResponse = await healthHubService.getSectionById(Number(sectionId));
@@ -67,7 +68,6 @@ const SubsectionFormPage: React.FC = () => {
                         setSubsection(fetchedSubsection);
                         setName(fetchedSubsection.name);
                         setContent(fetchedSubsection.content);
-                        setOrder(fetchedSubsection.order);
                     } else {
                         showToast('Failed to load subsection', 'error');
                         navigate(`/health-hub/subtopics/${subtopicId}`);
@@ -87,7 +87,7 @@ const SubsectionFormPage: React.FC = () => {
 
     const validateForm = (): boolean => {
         let isValid = true;
-        const newErrors = { name: '', content: '', order: '' };
+        const newErrors = { name: '', content: '' };
 
         if (!name.trim()) {
             newErrors.name = 'Name is required';
@@ -96,11 +96,6 @@ const SubsectionFormPage: React.FC = () => {
 
         if (!content.trim()) {
             newErrors.content = 'Content is required';
-            isValid = false;
-        }
-
-        if (!order || order <= 0) {
-            newErrors.order = 'Order must be a positive number';
             isValid = false;
         }
 
@@ -116,17 +111,27 @@ const SubsectionFormPage: React.FC = () => {
         try {
             setSaving(true);
 
+            // Dynamically import to ensure we get the latest version
+            const { healthHubService } = await import('../../services/healthHubService');
+
+            // Log to confirm URL format
+            console.log('Section ID for subsection creation:', sectionId);
+
             const subsectionData = {
                 name,
                 content,
-                order,
                 section_id: Number(sectionId)
             };
+
+            console.log('Creating subsection with data:', subsectionData);
 
             let response;
             if (subsectionId) {
                 // Update existing subsection
-                response = await healthHubService.updateSubsection(Number(subsectionId), subsectionData);
+                response = await healthHubService.updateSubsection(Number(subsectionId), {
+                    name,
+                    content
+                });
             } else {
                 // Create new subsection
                 response = await healthHubService.createSubsection(subsectionData);
@@ -203,17 +208,7 @@ const SubsectionFormPage: React.FC = () => {
                         helperText={errors.name}
                     />
 
-                    <TextField
-                        label="Order"
-                        type="number"
-                        value={order}
-                        onChange={(e) => setOrder(parseInt(e.target.value) || 0)}
-                        fullWidth
-                        required
-                        inputProps={{ min: 1 }}
-                        error={!!errors.order}
-                        helperText={errors.order || 'The order in which this subsection appears in the section'}
-                    />
+
 
                     <Box>
                         <Typography variant="subtitle1" gutterBottom>
@@ -225,7 +220,7 @@ const SubsectionFormPage: React.FC = () => {
                             </Typography>
                         )}
                         <RichTextEditor
-                            label= ""
+                            label=""
                             value={content}
                             onChange={(value) => setContent(value)}
                         />

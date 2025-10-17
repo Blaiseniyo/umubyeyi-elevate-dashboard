@@ -185,6 +185,7 @@ const healthHubSlice = createSlice({
             })
             .addCase(fetchSubtopicById.fulfilled, (state, action) => {
                 state.loading = false;
+                // Simply set the currentSubtopic to the API response as is
                 state.currentSubtopic = action.payload;
             })
             .addCase(fetchSubtopicById.rejected, (state, action) => {

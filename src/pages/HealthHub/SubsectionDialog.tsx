@@ -15,7 +15,7 @@ import RichTextEditor from '../../components/Common/richTextEditor/RichTextEdito
 interface SubsectionDialogProps {
     open: boolean;
     onClose: () => void;
-    onSave: (data: { name: string; content: string; order: number }) => void;
+    onSave: (data: { name: string; content: string }) => void;
     subsection: Subsection | null;
     sectionId?: number | null;
 }
@@ -23,29 +23,25 @@ interface SubsectionDialogProps {
 const SubsectionDialog: React.FC<SubsectionDialogProps> = ({ open, onClose, onSave, subsection }) => {
     const [name, setName] = useState('');
     const [content, setContent] = useState('');
-    const [order, setOrder] = useState<number>(1);
     const [errors, setErrors] = useState({
         name: '',
-        content: '',
-        order: ''
+        content: ''
     });
 
     useEffect(() => {
         if (subsection) {
             setName(subsection.name || '');
             setContent(subsection.content || '');
-            setOrder(subsection.order || 1);
         } else {
             setName('');
             setContent('');
-            setOrder(1);
         }
-        setErrors({ name: '', content: '', order: '' });
+        setErrors({ name: '', content: '' });
     }, [subsection, open]);
 
     const validateForm = (): boolean => {
         let isValid = true;
-        const newErrors = { name: '', content: '', order: '' };
+        const newErrors = { name: '', content: '' };
 
         if (!name.trim()) {
             newErrors.name = 'Name is required';
@@ -57,11 +53,6 @@ const SubsectionDialog: React.FC<SubsectionDialogProps> = ({ open, onClose, onSa
             isValid = false;
         }
 
-        if (!order || order <= 0) {
-            newErrors.order = 'Order must be a positive number';
-            isValid = false;
-        }
-
         setErrors(newErrors);
         return isValid;
     };
@@ -70,8 +61,7 @@ const SubsectionDialog: React.FC<SubsectionDialogProps> = ({ open, onClose, onSa
         if (validateForm()) {
             onSave({
                 name,
-                content,
-                order
+                content
             });
         }
     };
@@ -101,17 +91,7 @@ const SubsectionDialog: React.FC<SubsectionDialogProps> = ({ open, onClose, onSa
                         helperText={errors.name}
                     />
 
-                    <TextField
-                        label="Order"
-                        type="number"
-                        value={order}
-                        onChange={(e) => setOrder(parseInt(e.target.value) || 0)}
-                        fullWidth
-                        required
-                        inputProps={{ min: 1 }}
-                        error={!!errors.order}
-                        helperText={errors.order || 'The order in which this subsection appears in the section'}
-                    />
+
 
                     <Box>
                         <Box sx={{ mb: 1 }}>

@@ -17,7 +17,7 @@ import { Video } from '../../../types/healthHub';
 interface VideosTabProps {
     subtopicId: string;
     videos: Video[];
-    loadingVideos: boolean;
+    loadingVideos?: boolean;
     handleDeleteVideo: (id: number) => void;
 }
 
@@ -44,11 +44,12 @@ const VideosTab: React.FC<VideosTabProps> = ({
 
             <Divider sx={{ mb: 3 }} />
 
-            {loadingVideos ? (
+            {/* {loadingVideos ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
                     <LoadingSpinner />
                 </Box>
-            ) : videos.length === 0 ? (
+            ) :  */}
+            {videos.length === 0 ? (
                 <Box sx={{ textAlign: 'center', py: 4 }}>
                     <Typography variant="h6">No videos found</Typography>
                     <Typography variant="body2" color="text.secondary" paragraph>

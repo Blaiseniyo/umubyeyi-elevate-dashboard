@@ -214,14 +214,6 @@ const VideoFormPage: React.FC = () => {
                         </FormControl>
 
                         <FormControl fullWidth sx={{ mb: 3 }} error={!!errors.url}>
-                            {/* <Box sx={{ mb: 2 }}>
-                                <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                                    Upload Video File
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
-                                    Large videos will be split into small chunks for reliable upload
-                                </Typography>
-                            </Box> */}
 
                             {/* Use VideoUpload component */}
                             <VideoUpload
@@ -257,18 +249,14 @@ const VideoFormPage: React.FC = () => {
                         </FormControl>
 
                         <FormControl fullWidth sx={{ mb: 3 }}>
-                            <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                                Thumbnail Image
-                            </Typography>
 
                             {/* Use ImageUpload component for the thumbnail */}
                             <ImageUpload
-                                label="Thumbnail"
+                                label="Video Thumbnail Image"
                                 value={thumbnail}
                                 displayUrl={thumbnail}
                                 onChange={(url: string | null, _signedUrl: string | null) => {
                                     setThumbnail(url || '');
-                                    // No need to clear file reference as we're not using thumbnailFile anymore
                                 }}
                                 accept="image/*"
                                 filePath="health_hub/thumbnails"

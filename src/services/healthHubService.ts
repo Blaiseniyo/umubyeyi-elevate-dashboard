@@ -92,10 +92,9 @@ class HealthHubService {
                             name: section.name,
                             content: section.content,
                             cover_image_url: section.cover_image_url,
-                            order: 0, // Default order since it's not in the API response
                             subtopic_id: st.parent_topic_id,
                             parent_sub_topic_id: st.id,
-                            subsections: [], // No subsections in this view
+                            sub_sections: [], // No sub_sections in this view
                             created_at: '',
                             updated_at: ''
                         })) || [],
@@ -167,6 +166,7 @@ class HealthHubService {
             const url = `/health-hub/sub-topics/${id}/`;
             const response = await apiService.get<ApiResponse<Subtopic>>(url);
 
+            // Return the response as is - no need to transform since we're using sub_sections directly
             return {
                 success: response.success,
                 message: response.message,
@@ -250,8 +250,12 @@ class HealthHubService {
 
     async createSection(data: CreateSectionRequest): Promise<ApiResponseWrapper<Section>> {
         try {
-            const url = '/health-hub/sections/';
-            const response = await apiService.post<ApiResponse<Section>>(url, data);
+            // Use the correct endpoint from the API documentation
+            const url = `/health-hub/sub-topics/${data.subtopic_id}/add-section/`;
+            const response = await apiService.post<ApiResponse<Section>>(url, {
+                name: data.name,
+                content: data.content
+            });
 
             return {
                 success: response.success,
@@ -267,8 +271,12 @@ class HealthHubService {
 
     async updateSection(id: number, data: UpdateSectionRequest): Promise<ApiResponseWrapper<Section>> {
         try {
+            // Use the correct endpoint for updating a section
             const url = `/health-hub/sections/${id}/`;
-            const response = await apiService.put<ApiResponse<Section>>(url, data);
+            const response = await apiService.put<ApiResponse<Section>>(url, {
+                name: data.name,
+                content: data.content
+            });
 
             return {
                 success: response.success,
@@ -302,7 +310,7 @@ class HealthHubService {
     // Subsection methods
     async getSubsectionById(id: number): Promise<ApiResponseWrapper<Subsection>> {
         try {
-            const url = `/health-hub/subsections/${id}/`;
+            const url = `/health-hub/sub-sections/${id}/`;
             const response = await apiService.get<ApiResponse<Subsection>>(url);
 
             return {
@@ -319,8 +327,14 @@ class HealthHubService {
 
     async createSubsection(data: CreateSubsectionRequest): Promise<ApiResponseWrapper<Subsection>> {
         try {
-            const url = '/health-hub/subsections/';
-            const response = await apiService.post<ApiResponse<Subsection>>(url, data);
+            // Ensure we're using the correct endpoint format
+            const url = `/health-hub/sections/${data.section_id}/add-sub-section/`;
+            console.log('Creating subsection with URL:', url); // Add logging to debug
+
+            const response = await apiService.post<ApiResponse<Subsection>>(url, {
+                name: data.name,
+                content: data.content
+            });
 
             return {
                 success: response.success,
@@ -336,8 +350,11 @@ class HealthHubService {
 
     async updateSubsection(id: number, data: UpdateSubsectionRequest): Promise<ApiResponseWrapper<Subsection>> {
         try {
-            const url = `/health-hub/subsections/${id}/`;
-            const response = await apiService.put<ApiResponse<Subsection>>(url, data);
+            const url = `/health-hub/sub-sections/${id}/`;
+            const response = await apiService.put<ApiResponse<Subsection>>(url, {
+                name: data.name,
+                content: data.content
+            });
 
             return {
                 success: response.success,
@@ -353,7 +370,7 @@ class HealthHubService {
 
     async deleteSubsection(id: number): Promise<ApiResponseWrapper<null>> {
         try {
-            const url = `/health-hub/subsections/${id}/`;
+            const url = `/health-hub/sub-sections/${id}/`;
             const response = await apiService.delete<ApiResponse<null>>(url);
 
             return {

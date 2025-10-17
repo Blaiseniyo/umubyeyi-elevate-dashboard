@@ -10,44 +10,45 @@ import {
     Box
 } from '@mui/material';
 import { Section } from '../../types/healthHub';
+import RichTextEditor from '../../components/Common/richTextEditor/RichTextEditor';
 
 interface SectionDialogProps {
     open: boolean;
     onClose: () => void;
-    onSave: (data: { name: string; order: number }) => void;
+    onSave: (data: { name: string; content: string }) => void;
     section: Section | null;
 }
 
 const SectionDialog: React.FC<SectionDialogProps> = ({ open, onClose, onSave, section }) => {
     const [name, setName] = useState('');
-    const [order, setOrder] = useState<number>(1);
+    const [content, setContent] = useState('');
     const [errors, setErrors] = useState({
         name: '',
-        order: ''
+        content: ''
     });
 
     useEffect(() => {
         if (section) {
             setName(section.name || '');
-            setOrder(section.order || 1);
+            setContent(section.content || '');
         } else {
             setName('');
-            setOrder(1);
+            setContent('');
         }
-        setErrors({ name: '', order: '' });
+        setErrors({ name: '', content: '' });
     }, [section, open]);
 
     const validateForm = (): boolean => {
         let isValid = true;
-        const newErrors = { name: '', order: '' };
+        const newErrors = { name: '', content: '' };
 
         if (!name.trim()) {
             newErrors.name = 'Name is required';
             isValid = false;
         }
 
-        if (!order || order <= 0) {
-            newErrors.order = 'Order must be a positive number';
+        if (!content.trim()) {
+            newErrors.content = 'Content is required';
             isValid = false;
         }
 
@@ -59,13 +60,13 @@ const SectionDialog: React.FC<SectionDialogProps> = ({ open, onClose, onSave, se
         if (validateForm()) {
             onSave({
                 name,
-                order
+                content
             });
         }
     };
 
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+        <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
             <DialogTitle>{section ? 'Edit Section' : 'Create New Section'}</DialogTitle>
             <DialogContent>
                 <DialogContentText sx={{ mb: 2 }}>
@@ -85,17 +86,18 @@ const SectionDialog: React.FC<SectionDialogProps> = ({ open, onClose, onSave, se
                         helperText={errors.name}
                     />
 
-                    <TextField
-                        label="Order"
-                        type="number"
-                        value={order}
-                        onChange={(e) => setOrder(parseInt(e.target.value) || 0)}
-                        fullWidth
-                        required
-                        inputProps={{ min: 1 }}
-                        error={!!errors.order}
-                        helperText={errors.order || 'The order in which this section appears in the course'}
-                    />
+                    <Box sx={{ mt: 2 }}>
+                        {/* <Box sx={{ mb: 1 }}>Content</Box> */}
+                        <RichTextEditor
+                            value={content}
+                            onChange={setContent}
+                        />
+                        {errors.content && (
+                            <Box sx={{ color: 'error.main', mt: 1, fontSize: '0.75rem' }}>
+                                {errors.content}
+                            </Box>
+                        )}
+                    </Box>
                 </Box>
             </DialogContent>
             <DialogActions>

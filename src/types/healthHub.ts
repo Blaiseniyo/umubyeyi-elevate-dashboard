@@ -4,7 +4,6 @@ export interface Subsection {
     id: number;
     name: string;
     content: string; // Rich text content
-    order: number;
     created_at: string;
     updated_at: string;
 }
@@ -12,14 +11,13 @@ export interface Subsection {
 export interface Section {
     id: number;
     name: string;
-    content?: string;
+    content: string;
     cover_image_url?: string;
-    order?: number;
     subtopic_id?: number;
     parent_sub_topic_id?: number;
-    subsections?: Subsection[];
-    created_at?: string;
-    updated_at?: string;
+    created_at: string;
+    updated_at: string;
+    sub_sections?: Subsection[];
 }
 
 export interface Video {
@@ -113,26 +111,24 @@ export interface UpdateSubtopicRequest {
 
 export interface CreateSectionRequest {
     name: string;
-    order: number;
+    content: string;
     subtopic_id: number;
 }
 
 export interface UpdateSectionRequest {
     name?: string;
-    order?: number;
+    content?: string;
 }
 
 export interface CreateSubsectionRequest {
     name: string;
     content: string;
-    order: number;
     section_id: number;
 }
 
 export interface UpdateSubsectionRequest {
     name?: string;
     content?: string;
-    order?: number;
 }
 
 export interface CreateVideoRequest {

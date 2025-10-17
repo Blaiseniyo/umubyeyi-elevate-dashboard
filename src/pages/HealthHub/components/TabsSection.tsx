@@ -17,6 +17,8 @@ import { Section, Video, Podcast } from '../../../types/healthHub';
 interface TabsSectionProps {
     subtopicId: string;
     sections: Section[];
+    videos: Video[];
+    podcasts: Podcast[];
     onOpenSectionDialog: (section?: Section) => void;
     onDeleteSection: (id: number) => void;
     onNavigateToSubsectionForm: (section: Section, subsection?: any) => void;
@@ -26,70 +28,26 @@ interface TabsSectionProps {
 const TabsSection: React.FC<TabsSectionProps> = ({
     subtopicId,
     sections,
+    videos,
+    podcasts,
     onOpenSectionDialog,
     onDeleteSection,
     onNavigateToSubsectionForm,
     onDeleteSubsection
 }) => {
     const [activeTab, setActiveTab] = useState<number>(0);
-    const [videos, setVideos] = useState<Video[]>([]);
-    const [podcasts, setPodcasts] = useState<Podcast[]>([]);
-    const [loadingVideos, setLoadingVideos] = useState<boolean>(false);
-    const [loadingPodcasts, setLoadingPodcasts] = useState<boolean>(false);
+    // const [loadingVideos, setLoadingVideos] = useState<boolean>(false);
+    // const [loadingPodcasts, setLoadingPodcasts] = useState<boolean>(false);
     const { showToast } = useToast();
 
-    // Function to load videos for the current subtopic
-    const loadVideos = async () => {
-        if (!subtopicId) return;
-
-        try {
-            setLoadingVideos(true);
-            const healthHubService = await import('../../../services/healthHubService').then(mod => mod.healthHubService);
-            const response = await healthHubService.getVideos(Number(subtopicId));
-
-            if (response.success) {
-                setVideos(response.data);
-            } else {
-                showToast('Failed to load videos', 'error');
-            }
-        } catch (error) {
-            console.error('Error loading videos:', error);
-            showToast('Error loading videos', 'error');
-        } finally {
-            setLoadingVideos(false);
-        }
-    };
-
-    // Function to load podcasts for the current subtopic
-    const loadPodcasts = async () => {
-        if (!subtopicId) return;
-
-        try {
-            setLoadingPodcasts(true);
-            const healthHubService = await import('../../../services/healthHubService').then(mod => mod.healthHubService);
-            const response = await healthHubService.getPodcasts(Number(subtopicId));
-
-            if (response.success) {
-                setPodcasts(response.data);
-            } else {
-                showToast('Failed to load podcasts', 'error');
-            }
-        } catch (error) {
-            console.error('Error loading podcasts:', error);
-            showToast('Error loading podcasts', 'error');
-        } finally {
-            setLoadingPodcasts(false);
-        }
-    };
-
     // Load videos and podcasts when tab changes
-    useEffect(() => {
-        if (activeTab === 1 && videos.length === 0) {
-            loadVideos();
-        } else if (activeTab === 2 && podcasts.length === 0) {
-            loadPodcasts();
-        }
-    }, [activeTab, videos.length, podcasts.length, subtopicId]);
+    // useEffect(() => {
+    //     if (activeTab === 1 && videos.length === 0) {
+    //         loadVideos();
+    //     } else if (activeTab === 2 && podcasts.length === 0) {
+    //         loadPodcasts();
+    //     }
+    // }, [activeTab, videos.length, podcasts.length, subtopicId]);
 
     const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
         setActiveTab(newValue);
@@ -104,7 +62,7 @@ const TabsSection: React.FC<TabsSectionProps> = ({
                 if (response.success) {
                     showToast('Video deleted successfully', 'success');
                     // Refresh the videos list
-                    loadVideos();
+                    // loadVideos();
                 } else {
                     showToast('Failed to delete video', 'error');
                 }
@@ -124,7 +82,7 @@ const TabsSection: React.FC<TabsSectionProps> = ({
                 if (response.success) {
                     showToast('Podcast deleted successfully', 'success');
                     // Refresh the podcasts list
-                    loadPodcasts();
+                    // loadPodcasts();
                 } else {
                     showToast('Failed to delete podcast', 'error');
                 }
@@ -198,7 +156,7 @@ const TabsSection: React.FC<TabsSectionProps> = ({
                     <VideosTab
                         subtopicId={subtopicId}
                         videos={videos}
-                        loadingVideos={loadingVideos}
+                        // loadingVideos={loadingVideos}
                         handleDeleteVideo={handleDeleteVideo}
                     />
                 )}
@@ -215,7 +173,7 @@ const TabsSection: React.FC<TabsSectionProps> = ({
                     <PodcastsTab
                         subtopicId={subtopicId}
                         podcasts={podcasts}
-                        loadingPodcasts={loadingPodcasts}
+                        // loadingPodcasts={loadingPodcasts}
                         handleDeletePodcast={handleDeletePodcast}
                     />
                 )}

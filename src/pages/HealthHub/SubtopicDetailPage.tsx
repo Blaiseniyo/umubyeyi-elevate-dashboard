@@ -13,6 +13,7 @@ import { useToast } from '../../hooks';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { fetchSubtopicById } from '../../store/slices/healthHubSlice';
 import LoadingSpinner from '../../components/Common/LoadingSpinner';
+import ConfirmDialog from '../../components/Common/ConfirmDialog';
 import { Section, Subsection } from '../../types/healthHub';
 import SectionDialog from './SectionDialog';
 import TabsSection from './components/TabsSection';
@@ -28,6 +29,13 @@ const SubtopicDetailPage: React.FC = () => {
     const [openDescriptionDialog, setOpenDescriptionDialog] = useState<boolean>(false);
     const [descriptionContent, setDescriptionContent] = useState<string>('');
     const [selectedSection, setSelectedSection] = useState<Section | null>(null);
+
+    // Confirmation dialog states
+    const [openDeleteSectionDialog, setOpenDeleteSectionDialog] = useState<boolean>(false);
+    const [openDeleteSubsectionDialog, setOpenDeleteSubsectionDialog] = useState<boolean>(false);
+    const [sectionToDelete, setSectionToDelete] = useState<number | null>(null);
+    const [subsectionToDelete, setSubsectionToDelete] = useState<number | null>(null);
+
     const { showToast } = useToast();
 
     useEffect(() => {
@@ -35,6 +43,11 @@ const SubtopicDetailPage: React.FC = () => {
             dispatch(fetchSubtopicById(Number(subtopicId)));
         }
     }, [dispatch, subtopicId]);
+
+    // useEffect(() => {
+    //     if (currentSubtopic) {
+    //     }
+    // }, [currentSubtopic]);
 
     useEffect(() => {
         if (currentSubtopic?.content) {
@@ -61,9 +74,18 @@ const SubtopicDetailPage: React.FC = () => {
     // Navigate to subsection form page instead of opening a dialog
     const handleNavigateToSubsectionForm = (section: Section, subsection?: Subsection) => {
         if (subsection) {
-            navigate(`/health-hub/subtopics/${subtopicId}/sections/${section.id}/subsections/${subsection.id}/edit`);
+            navigate(`/health-hub/subtopics/${subtopicId}/sections/${section.id}/subsections/${subsection.id}/edit`, {
+                state: {
+                    section,
+                    subsection
+                }
+            });
         } else {
-            navigate(`/health-hub/subtopics/${subtopicId}/sections/${section.id}/subsections/create`);
+            navigate(`/health-hub/subtopics/${subtopicId}/sections/${section.id}/subsections/create`, {
+                state: {
+                    section
+                }
+            });
         }
     };
 
@@ -101,18 +123,38 @@ const SubtopicDetailPage: React.FC = () => {
     const handleSaveSection = async (formData: any) => {
         try {
             const healthHubService = await import('../../services/healthHubService').then(mod => mod.healthHubService);
-            const payload = {
-                ...formData,
-                subtopic_id: Number(subtopicId)
-            };
 
-            const response = selectedSection
-                ? await healthHubService.updateSection(selectedSection.id, payload)
-                : await healthHubService.createSection(payload);
+            if (selectedSection) {
+                // Update existing section
+                const response = await healthHubService.updateSection(selectedSection.id, {
+                    name: formData.name,
+                    content: formData.content
+                });
 
-            if (response.success) {
-                dispatch(fetchSubtopicById(Number(subtopicId)));
-                handleCloseSectionDialog();
+                if (response.success) {
+                    showToast('Section updated successfully', 'success');
+                    dispatch(fetchSubtopicById(Number(subtopicId)));
+                    handleCloseSectionDialog();
+                } else {
+                    showToast('Failed to update section', 'error');
+                }
+            } else {
+                // Create new section
+                const payload = {
+                    name: formData.name,
+                    content: formData.content,
+                    subtopic_id: Number(subtopicId)
+                };
+
+                const response = await healthHubService.createSection(payload);
+
+                if (response.success) {
+                    showToast('Section created successfully', 'success');
+                    dispatch(fetchSubtopicById(Number(subtopicId)));
+                    handleCloseSectionDialog();
+                } else {
+                    showToast('Failed to create section', 'error');
+                }
             }
         } catch (error) {
             console.error(`Error ${selectedSection ? 'updating' : 'creating'} section:`, error);
@@ -120,50 +162,65 @@ const SubtopicDetailPage: React.FC = () => {
         }
     };
 
-    const handleDeleteSection = async (id: number) => {
-        if (window.confirm('Are you sure you want to delete this section? This will also delete all subsections within.')) {
-            try {
-                // Use the healthHubService directly since we haven't implemented
-                // delete section action in the Redux slice yet
-                const healthHubService = await import('../../services/healthHubService').then(mod => mod.healthHubService);
-                const response = await healthHubService.deleteSection(id);
+    // Open confirmation dialog for section deletion
+    const handleDeleteSection = (id: number) => {
+        setSectionToDelete(id);
+        setOpenDeleteSectionDialog(true);
+    };
 
-                if (response.success) {
-                    showToast('Section deleted successfully', 'success');
-                    dispatch(fetchSubtopicById(Number(subtopicId)));
-                } else {
-                    showToast('Failed to delete section', 'error');
-                }
-            } catch (error) {
-                console.error('Error deleting section:', error);
-                showToast('Error deleting section', 'error');
+    // Open confirmation dialog for subsection deletion
+    const handleDeleteSubsection = (id: number) => {
+        setSubsectionToDelete(id);
+        setOpenDeleteSubsectionDialog(true);
+    };
+
+    // Handle actual section deletion after confirmation
+    const confirmDeleteSection = async () => {
+        if (sectionToDelete === null) return;
+
+        try {
+            const healthHubService = await import('../../services/healthHubService').then(mod => mod.healthHubService);
+            const response = await healthHubService.deleteSection(sectionToDelete);
+
+            if (response.success) {
+                showToast('Section deleted successfully', 'success');
+                dispatch(fetchSubtopicById(Number(subtopicId)));
+            } else {
+                showToast(response.message || 'Failed to delete section', 'error');
             }
+        } catch (error: any) {
+            console.error('Error deleting section:', error);
+            showToast(error?.message || 'Error deleting section', 'error');
+        } finally {
+            // Close dialog and reset state
+            setOpenDeleteSectionDialog(false);
+            setSectionToDelete(null);
         }
     };
 
-    const handleDeleteSubsection = async (id: number) => {
-        if (window.confirm('Are you sure you want to delete this subsection?')) {
-            try {
-                // Use the healthHubService directly since we haven't implemented
-                // delete subsection action in the Redux slice yet
-                const healthHubService = await import('../../services/healthHubService').then(mod => mod.healthHubService);
-                const response = await healthHubService.deleteSubsection(id);
+    // Handle actual subsection deletion after confirmation
+    const confirmDeleteSubsection = async () => {
+        if (subsectionToDelete === null) return;
 
-                console.log('Delete subsection response:', response);
-                // if (response.success || response.status_code === 204) {
-                //     showToast('Subsection deleted successfully', 'success');
-                //     dispatch(fetchSubtopicById(Number(subtopicId)));
-                // } else {
-                //     showToast('Failed to delete subsection', 'error');
-                // }
-            } catch (error) {
-                console.error('Error deleting subsection:', error);
-                showToast('Error deleting subsection', 'error');
+        try {
+            const healthHubService = await import('../../services/healthHubService').then(mod => mod.healthHubService);
+            const response = await healthHubService.deleteSubsection(subsectionToDelete);
+
+            if (response.success) {
+                showToast('Subsection deleted successfully', 'success');
+                dispatch(fetchSubtopicById(Number(subtopicId)));
+            } else {
+                showToast(response.message || 'Failed to delete subsection', 'error');
             }
+        } catch (error: any) {
+            console.error('Error deleting subsection:', error);
+            showToast(error?.message || 'Error deleting subsection', 'error');
+        } finally {
+            // Close dialog and reset state
+            setOpenDeleteSubsectionDialog(false);
+            setSubsectionToDelete(null);
         }
-    };
-
-    if (loading) {
+    }; if (loading) {
         return (
             <Container sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
                 <LoadingSpinner />
@@ -230,6 +287,8 @@ const SubtopicDetailPage: React.FC = () => {
                 <TabsSection
                     subtopicId={subtopicId || ''}
                     sections={currentSubtopic.sections || []}
+                    videos={currentSubtopic.videos || []}
+                    podcasts={currentSubtopic.podcasts || []}
                     onOpenSectionDialog={handleOpenSectionDialog}
                     onDeleteSection={handleDeleteSection}
                     onNavigateToSubsectionForm={handleNavigateToSubsectionForm}
@@ -250,6 +309,36 @@ const SubtopicDetailPage: React.FC = () => {
                 onClose={handleCloseDescriptionDialog}
                 onSave={handleSaveDescription}
                 onChange={setDescriptionContent}
+            />
+
+            {/* Confirm Delete Section Dialog */}
+            <ConfirmDialog
+                open={openDeleteSectionDialog}
+                title="Delete Section"
+                message="Are you sure you want to delete this section? This will also delete all sub-sections within."
+                onConfirm={confirmDeleteSection}
+                onCancel={() => {
+                    setOpenDeleteSectionDialog(false);
+                    setSectionToDelete(null);
+                }}
+                confirmText="Delete"
+                cancelText="Cancel"
+                severity="error"
+            />
+
+            {/* Confirm Delete Subsection Dialog */}
+            <ConfirmDialog
+                open={openDeleteSubsectionDialog}
+                title="Delete Subsection"
+                message="Are you sure you want to delete this subsection?"
+                onConfirm={confirmDeleteSubsection}
+                onCancel={() => {
+                    setOpenDeleteSubsectionDialog(false);
+                    setSubsectionToDelete(null);
+                }}
+                confirmText="Delete"
+                cancelText="Cancel"
+                severity="error"
             />
         </Container>
     );

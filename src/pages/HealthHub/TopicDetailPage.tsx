@@ -55,10 +55,9 @@ const TopicDetailPage: React.FC = () => {
 
     useEffect(() => {
         if (topicId) {
-            console.log('Fetching topic data for ID:', topicId);
             dispatch(fetchTopicById(Number(topicId)));
         }
-    }, [dispatch, topicId, location.key]); // location.key changes on navigation
+    }, [dispatch, topicId, location.key]);
 
     useEffect(() => {
         if (error) {
@@ -132,7 +131,6 @@ const TopicDetailPage: React.FC = () => {
                 }
             }
         } catch (error) {
-            console.error(`Error deleting ${deleteItemType}:`, error);
             showToast(`Error deleting ${deleteItemType}`, 'error');
         } finally {
             setDeleteDialogOpen(false);

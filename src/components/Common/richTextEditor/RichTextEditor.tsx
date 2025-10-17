@@ -1,4 +1,4 @@
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useEffect } from "react";
 import type { EditorOptions, Editor } from "@tiptap/core";
 import {
     LinkBubbleMenu,
@@ -145,6 +145,18 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         },
         [onChange]
     );
+
+    // Update editor content when value prop changes
+    useEffect(() => {
+        // Wait for the editor to be initialized
+        if (rteRef.current?.editor && value) {
+            // Only update if the current content is different from the new value
+            const currentContent = rteRef.current.editor.getHTML();
+            if (currentContent !== value) {
+                rteRef.current.editor.commands.setContent(value);
+            }
+        }
+    }, [value]);
 
     return (
         <Box>
