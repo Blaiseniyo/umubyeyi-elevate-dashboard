@@ -157,7 +157,7 @@ const PodcastFormPage: React.FC = () => {
                             underline="hover"
                             color="inherit"
                         >
-                            {currentSubtopic.topic_name}
+                            {currentSubtopic.parent_topic}
                         </MuiLink>
                     )}
                     <MuiLink
@@ -242,7 +242,7 @@ const PodcastFormPage: React.FC = () => {
                                 value={url}
                                 onChange={(e) => setUrl(e.target.value)}
                                 fullWidth
-                                placeholder="https://example.com/podcast.mp3"
+                                placeholder="Add audio URL"
                                 sx={{ mt: 1 }}
                                 error={!!errors.url}
                             />

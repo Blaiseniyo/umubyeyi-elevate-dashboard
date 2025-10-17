@@ -157,7 +157,7 @@ const VideoFormPage: React.FC = () => {
                             underline="hover"
                             color="inherit"
                         >
-                            {currentSubtopic.topic_name}
+                            {currentSubtopic.parent_topic}
                         </MuiLink>
                     )}
                     <MuiLink
@@ -242,7 +242,7 @@ const VideoFormPage: React.FC = () => {
                                 value={url}
                                 onChange={(e) => setUrl(e.target.value)}
                                 fullWidth
-                                placeholder="https://youtube.com/video.mp4"
+                                placeholder="Add video URL"
                                 sx={{ mt: 1 }}
                                 error={!!errors.url}
                             />

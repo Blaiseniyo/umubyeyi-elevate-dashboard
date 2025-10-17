@@ -252,7 +252,7 @@ const SubtopicDetailPage: React.FC = () => {
                         underline="hover"
                         color="inherit"
                     >
-                        {currentSubtopic.topic_name}
+                        {currentSubtopic.parent_topic}
                     </MuiLink>
                     <Typography color="text.primary">{currentSubtopic.name}</Typography>
                 </Breadcrumbs>
@@ -273,7 +273,7 @@ const SubtopicDetailPage: React.FC = () => {
                         to={`/health-hub/topics/${currentSubtopic.parent_topic_id}`}
                         startIcon={<ArrowBackIcon />}
                     >
-                        Back to {currentSubtopic.topic_name}
+                        Back to {currentSubtopic.parent_topic}
                     </Button>
                 </Box>
 

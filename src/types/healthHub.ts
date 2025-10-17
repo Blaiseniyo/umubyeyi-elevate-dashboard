@@ -51,7 +51,7 @@ export interface Subtopic {
     signed_thumbnail?: string; // URL for displaying the image
     content: string; // Rich text description including "About Course" and "What You Will Learn"
     parent_topic_id: number;
-    topic_name?: string;
+    parent_topic: string;
     course_duration_minutes: number;
     course_duration: string; // e.g., "2 Hrs 30 Min"
     sections: Section[];
@@ -77,6 +77,7 @@ export interface Topic {
 export interface SubTopicSummary {
     id: number;
     parent_topic_id: number;
+    parent_topic: string;
     name: string;
     cover_image_url: string;
     course_duration_minutes?: number;
