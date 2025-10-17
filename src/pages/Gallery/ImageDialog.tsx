@@ -74,9 +74,6 @@ const ImageDialog: React.FC<ImageDialogProps> = ({
             <DialogContent>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2 }}>
                     <Box>
-                        <Typography variant="subtitle2" gutterBottom>
-                            Upload Image
-                        </Typography>
                         <ImageUpload
                             label="Gallery Image"
                             displayUrl={""}
