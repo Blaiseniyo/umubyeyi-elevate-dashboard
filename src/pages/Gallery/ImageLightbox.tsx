@@ -56,17 +56,24 @@ const ImageLightbox: React.FC<ImageLightboxProps> = ({
             maxWidth="lg"
             fullWidth
             fullScreen={fullScreen}
+            disableEscapeKeyDown={false} // Allow ESC key to close dialog
             sx={{
                 '& .MuiDialog-paper': {
                     bgcolor: 'black',
                     m: { xs: 0, sm: 1 },
                     width: '100%',
                     height: fullScreen ? '100%' : 'auto',
+                },
+                '& .MuiBackdrop-root': {
+                    backgroundColor: 'rgba(0, 0, 0, 0.9)' // Darker backdrop for better contrast
                 }
             }}
         >
             <IconButton
-                onClick={onClose}
+                onClick={(e) => {
+                    e.stopPropagation(); // Prevent event bubbling
+                    onClose();
+                }}
                 sx={{
                     position: 'absolute',
                     top: 8,
@@ -75,13 +82,17 @@ const ImageLightbox: React.FC<ImageLightboxProps> = ({
                     bgcolor: 'rgba(0, 0, 0, 0.5)',
                     '&:hover': {
                         bgcolor: 'rgba(0, 0, 0, 0.7)',
-                    }
+                    },
+                    zIndex: 9999 // Ensure button is above all other elements
                 }}
+                aria-label="close"
             >
                 <CloseIcon />
             </IconButton>
 
-            <DialogContent sx={{
+            <DialogContent 
+                onClick={(e) => e.stopPropagation()} // Prevent dialog content clicks from closing the dialog
+                sx={{
                 p: 0,
                 display: 'flex',
                 justifyContent: 'center',
